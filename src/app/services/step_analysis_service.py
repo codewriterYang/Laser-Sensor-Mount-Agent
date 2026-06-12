@@ -85,8 +85,10 @@ def _build_product_graph(parsed: ParsedProduct) -> ProductGraphSchema:
     for part in parsed.parts:
         part_id = uuid.uuid4()
         part_meta: dict = {}
-        if part.body_count > 0:
-            part_meta["bodyCount"] = part.body_count
+        if part.face_count > 0:
+            part_meta["faceCount"] = part.face_count
+        if part.surface_types:
+            part_meta["surfaceTypes"] = part.surface_types
         if part.length > 0:
             part_meta["length"] = part.length
             part_meta["width"] = part.width

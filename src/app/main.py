@@ -65,6 +65,11 @@ _static_dir = Path(__file__).parent / "static"
 _static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
+# 导出文件（PDF 和图片）
+_exports_dir = Path("exports")
+_exports_dir.mkdir(exist_ok=True)
+app.mount("/exports", StaticFiles(directory=str(_exports_dir)), name="exports")
+
 
 @app.get("/")
 async def root():

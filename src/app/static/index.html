@@ -260,7 +260,7 @@ async function submitReview() {
 // 第5步：渲染指导书
 async function renderInstruction() {
   document.getElementById('btn-render').disabled = true;
-  document.getElementById('btn-render').innerHTML = '<span class="spinner"></span> 正在渲染...';
+  document.getElementById('btn-render').innerHTML = '<span class="spinner"></span> 正在渲染并生成图片...';
 
   try {
     const r = await fetch(`${API}/instruction/render`, {
@@ -276,14 +276,35 @@ async function renderInstruction() {
     const d2 = await r2.json();
     const sections = d2.data.sections;
 
-    const typeNames = { cover: '封面', overview: '概述', step: '步骤', safety: '安全须知', ending: '尾页' };
-    const typeStyles = { cover: 'badge-warn', overview: 'badge-warn', step: 'badge-success', safety: 'badge-error', ending: 'badge-warn' };
+    // 以卡片形式展示每个 section，步骤显示图片
+    let html = `<h2 style="margin:16px 0 12px;">📄 装配指导书预览</h2>`;
 
-    document.getElementById('instruction-content').innerHTML =
-      `<p>指导书 ID：<code>${state.instructionId}</code></p>` +
-      `<table><tr><th>类型</th><th>内容</th></tr>` +
-      sections.map(s => `<tr><td><span class="badge ${typeStyles[s.sectionType] || 'badge-warn'}">${typeNames[s.sectionType] || s.sectionType}</span></td><td style="white-space:pre-wrap;">${s.content.substring(0,100)}${s.content.length>100?'...':''}${s.imagePath?' 📷 有图':''}</td></tr>`).join('') + '</table>';
+    for (const s of sections) {
+      const typeNames = { cover: '📋 封面', overview: '📖 概述', step: '🔧 装配步骤', safety: '⚠️ 安全须知', ending: '✅ 尾页' };
+      const typeName = typeNames[s.sectionType] || s.sectionType;
 
+      html += `<div class="card" style="margin:8px 0;">`;
+      html += `<h3 style="font-size:0.9rem;color:var(--primary);">${typeName}</h3>`;
+
+      // 步骤内容换行显示
+      const lines = s.content.split('\n').filter(l => l.trim());
+      for (const line of lines) {
+        html += `<p style="margin:4px 0;font-size:0.9rem;">${line}</p>`;
+      }
+
+      // 图片展示：imagePath 是本地路径如 exports/images/step_1_xxx.png
+      if (s.imagePath) {
+        // 转换为 HTTP URL：/exports/images/step_1_xxx.png
+        const imgUrl = '/' + s.imagePath.replace(/\\/g, '/');
+        html += `<div style="margin:12px 0;text-align:center;">`;
+        html += `<img src="${imgUrl}" alt="步骤图" style="max-width:100%;max-height:400px;border:1px solid var(--border);border-radius:8px;">`;
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+    }
+
+    document.getElementById('instruction-content').innerHTML = html;
     document.getElementById('btn-pdf').style.display = '';
     toast('指导书渲染成功');
   } catch(e) { toast('渲染失败：' + e.message, 'error'); }
