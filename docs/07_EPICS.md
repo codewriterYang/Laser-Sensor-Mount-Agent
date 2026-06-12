@@ -370,8 +370,21 @@ Commit（Story 级别提交）
 
 # Epic-4：MVP 边界与 Demo
 
-- **状态**：Planning
-- **Phase**：等待 Epic-3 完成后进入 Analysis
+- **状态**：Completed
+- **完成日期**：2026.6.12
+- **Phase**：全部 Story 完成，95 tests，0 skipped
+
+## 目标
+
+- 验证端到端流程可执行
+- 确认 MVP 功能边界清晰
+
+---
+
+# Epic-5：Assembly Knowledge Flywheel（装配知识飞轮）
+
+- **状态**：Deferred（非 MVP）
+- **Phase**：MVP 完成后进入 Analysis
 
 ## 目标
 

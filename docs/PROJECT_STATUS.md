@@ -23,8 +23,8 @@
 | **Epic-1** | STEP 文件解析与 ProductGraph 生成 | ✅ Completed | 2026.6.11 |
 | **Epic-2** | DraftProcessGraph 生成与审核 | ✅ Completed | 2026.6.12 |
 | **Epic-3** | ApprovedProcessGraph 与 AssemblyInstruction | ✅ Completed | 2026.6.12 |
-| **Epic-4** | MVP 边界与 Demo | 🔲 Pending | — |
-| **Epic-5** | Assembly Knowledge Flywheel | 🔲 Pending（非 MVP） | — |
+| **Epic-4** | MVP 边界与 Demo | ✅ Completed | 2026.6.12 |
+| **Epic-5** | Assembly Knowledge Flywheel | ⏸️ Deferred（非 MVP） | — |
 
 ---
 
@@ -126,8 +126,8 @@ _当前无进行中 Epic。Epic-3 已完成，Epic-4 等待启动。_
 | **Contract Test** | 20 | 0 | 0 | 全部 10 个端点覆盖 |
 | **Unit Test** | 36 | 0 | 0 | Epic-1/2/3 全部 Service |
 | **Integration Test** | 17 | 0 | 0 | 全部 6 个 Repository |
-| **E2E Test** | 11 | 0 | 0 | Epic-1/2/3 完整链路 |
-| **总计** | **89** | **0** | **0** | |
+| **E2E Test** | 17 | 0 | 0 | Epic-1/2/3/4 完整链路 |
+| **总计** | **95** | **0** | **0** | |
 
 **命令**：
 
