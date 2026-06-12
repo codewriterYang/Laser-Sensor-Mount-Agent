@@ -132,8 +132,13 @@ class ReviewService:
             elif d.action == "modify":
                 if sid in step_map:
                     modified = step_map[sid].model_copy(deep=True)
-                    modified.title = f"{modified.title} (已修改)"
-                    modified.description = d.reason or modified.description
+                    # 使用工程师提供的新标题（如有），否则保留原标题
+                    if d.newTitle:
+                        modified.title = d.newTitle
+                    # 使用工程师提供的新描述（如有）
+                    if d.reason:
+                        modified.description = d.reason
+                    logger.info(f"步骤 {modified.sequence} 已修改：{modified.title}")
                     result.append(modified)
 
             elif d.action == "insert":

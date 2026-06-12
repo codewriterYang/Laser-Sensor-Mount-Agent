@@ -94,12 +94,12 @@ class TestReviewService:
 
     def test_modify_step_updates_description(self):
         decisions = [
-            ReviewDecisionSchema(stepId=S1, action="modify", reason="Use torque wrench instead"),
+            ReviewDecisionSchema(stepId=S1, action="modify", reason="Use torque wrench instead", newTitle="安装底板（已审核）"),
         ]
         _, approved = self.svc.submit_review(UUID(self.dpg_id), decisions)
         assert len(approved.steps) == 1
         step = approved.steps[0]
-        assert "已修改" in step.title
+        assert "已审核" in step.title
         assert "torque wrench" in step.description.lower()
 
     def test_insert_adds_new_step(self):

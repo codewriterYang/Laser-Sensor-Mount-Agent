@@ -91,6 +91,7 @@ class ReviewDecisionSchema(BaseModel):
     stepId: UUID
     action: str  # accept | modify | delete | insert
     reason: str
+    newTitle: str | None = None  # 修改时的新标题（选填）
 
 
 class SubmitReviewRequest(BaseModel):

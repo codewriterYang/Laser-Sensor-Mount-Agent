@@ -220,26 +220,75 @@ async function generateProcess() {
 // 第4步：审核界面
 function buildReviewUI() {
   document.getElementById('review-steps').innerHTML = state.steps.map(s => `
-    <div class="review-row">
-      <span style="font-weight:600;">${s.sequence}.</span>
-      <div class="step-info"><strong>${s.title}</strong><br><small style="color:var(--muted)">${s.description}</small></div>
-      <select id="action-${s.stepId}">
-        <option value="accept">接受</option>
-        <option value="modify">修改</option>
-        <option value="delete">删除</option>
-      </select>
-      <input id="reason-${s.stepId}" placeholder="理由（选填）" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;width:150px;">
+    <div class="review-row" id="row-${s.stepId}">
+      <span style="font-weight:600;width:24px;">${s.sequence}.</span>
+      <div class="step-info" id="info-${s.stepId}">
+        <strong>${s.title}</strong><br>
+        <small style="color:var(--muted)">${s.description}</small>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:320px;">
+        <select id="action-${s.stepId}" onchange="onActionChange('${s.stepId}')" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);">
+          <option value="accept">✅ 接受</option>
+          <option value="modify">✏️ 修改</option>
+          <option value="delete">🗑️ 删除</option>
+        </select>
+        <div id="modify-fields-${s.stepId}" style="display:none;flex-direction:column;gap:4px;">
+          <input id="new-title-${s.stepId}" value="${s.title}" placeholder="新标题" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;">
+          <textarea id="new-desc-${s.stepId}" placeholder="新描述" rows="2" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;resize:vertical;">${s.description}</textarea>
+        </div>
+        <div id="delete-confirm-${s.stepId}" style="display:none;color:var(--danger);font-size:0.8rem;">
+          ⚠️ 此步骤将被删除，不可恢复
+        </div>
+      </div>
     </div>
   `).join('');
   setStep(4);
 }
 
+function onActionChange(stepId) {
+  const action = document.getElementById(`action-${stepId}`).value;
+  const modFields = document.getElementById(`modify-fields-${stepId}`);
+  const delConfirm = document.getElementById(`delete-confirm-${stepId}`);
+  const row = document.getElementById(`row-${stepId}`);
+
+  modFields.style.display = action === 'modify' ? 'flex' : 'none';
+  delConfirm.style.display = action === 'delete' ? 'block' : 'none';
+
+  // 行背景色变化提示
+  if (action === 'delete') {
+    row.style.background = '#fee2e2';
+  } else if (action === 'modify') {
+    row.style.background = '#fef9c3';
+  } else {
+    row.style.background = '';
+  }
+}
+
 async function submitReview() {
-  const decisions = state.steps.map(s => ({
-    stepId: s.stepId,
-    action: document.getElementById(`action-${s.stepId}`).value,
-    reason: document.getElementById(`reason-${s.stepId}`).value || '同意'
-  }));
+  const decisions = state.steps.map(s => {
+    const action = document.getElementById(`action-${s.stepId}`).value;
+    const decision = { stepId: s.stepId, action: action };
+
+    if (action === 'modify') {
+      decision.reason = document.getElementById(`new-desc-${s.stepId}`).value || s.description;
+      decision.newTitle = document.getElementById(`new-title-${s.stepId}`).value || s.title;
+    } else if (action === 'delete') {
+      decision.reason = '工程师删除此步骤';
+    } else {
+      decision.reason = '审核通过';
+    }
+    return decision;
+  });
+
+  // 确认提示
+  const modifyCount = decisions.filter(d => d.action === 'modify').length;
+  const deleteCount = decisions.filter(d => d.action === 'delete').length;
+  if (modifyCount > 0 || deleteCount > 0) {
+    let msg = '确认提交审核结果？';
+    if (modifyCount > 0) msg += `\n修改 ${modifyCount} 个步骤`;
+    if (deleteCount > 0) msg += `\n删除 ${deleteCount} 个步骤`;
+    if (!confirm(msg)) return;
+  }
 
   try {
     const r = await fetch(`${API}/process/review`, {
