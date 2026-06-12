@@ -18,11 +18,13 @@ from src.app.models.orm import (
     DraftProcessGraph,
     ApprovedProcessGraph,
     ReviewDecision,
+    AssemblyInstruction,
 )
 from src.app.repositories.product_graph_repository import ProductGraphRepository
 from src.app.repositories.step_file_repository import StepFileRepository
 from src.app.repositories.draft_process_repository import DraftProcessRepository
 from src.app.repositories.approved_process_repository import ApprovedProcessRepository
+from src.app.repositories.instruction_repository import InstructionRepository
 from src.app.repositories.review_decision_repository import ReviewDecisionRepository
 
 
@@ -230,3 +232,35 @@ class TestReviewDecisionRepository:
     def test_get_by_process_returns_empty_for_unknown(self, db_session: Session):
         repo = ReviewDecisionRepository(db_session)
         assert repo.get_by_process(uuid4()) == []
+
+
+class TestInstructionRepository:
+    def test_save_and_get_by_id(self, db_session: Session):
+        repo = InstructionRepository(db_session)
+        ai = AssemblyInstruction(
+            approved_process_id=str(uuid4()),
+            instruction_json=json.dumps({"instructionId": str(uuid4()), "title": "Test", "sections": []}),
+        )
+        repo.save(ai)
+        db_session.commit()
+
+        fetched = repo.get_by_id(UUID(ai.id))
+        assert fetched is not None
+        assert "Test" in fetched.instruction_json
+
+    def test_get_by_approved_process(self, db_session: Session):
+        repo = InstructionRepository(db_session)
+        approved_id = str(uuid4())
+        ai = AssemblyInstruction(
+            approved_process_id=approved_id,
+            instruction_json=json.dumps({"instructionId": str(uuid4()), "title": "Test", "sections": []}),
+        )
+        repo.save(ai)
+        db_session.commit()
+
+        fetched = repo.get_by_approved_process(UUID(approved_id))
+        assert fetched is not None
+
+    def test_get_by_id_returns_none_for_unknown(self, db_session: Session):
+        repo = InstructionRepository(db_session)
+        assert repo.get_by_id(uuid4()) is None

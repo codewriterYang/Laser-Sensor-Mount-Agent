@@ -30,6 +30,13 @@ from .models.schemas import (
     SubmitReviewRequest,
 )
 from .repositories.product_graph_repository import ProductGraphRepository
+from .services.instruction_service import (
+    ApprovedProcessNotFoundError as InstructionApprovedNotFoundError,
+    InstructionNotFoundError,
+    InstructionService,
+    PDFExportFailedError,
+    RenderFailedError,
+)
 from .services.process_generation_service import (
     ProcessGenerationFailedError,
     ProcessGenerationService,
@@ -189,25 +196,58 @@ async def get_approved_process(approved_process_id: UUID, db: Session = Depends(
     return _ok(approved.model_dump())
 
 
-# === Instruction (Epic-3 — not implemented yet) ===
+# === Instruction (Epic-3) ===
 
 
 @app.post("/api/v1/instruction/render")
-async def render_instruction(request: RenderInstructionRequest):
+async def render_instruction(request: RenderInstructionRequest, db: Session = Depends(get_db)):
     """Render an AssemblyInstruction from ApprovedProcessGraph. (Contract §7.1)"""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    svc = InstructionService(db)
+    try:
+        instruction_id, instruction = svc.render(request.approvedProcessId)
+        db.commit()
+    except InstructionApprovedNotFoundError:
+        db.rollback()
+        raise _error("APPROVED_PROCESS_NOT_FOUND", f"ApprovedProcess not found: {request.approvedProcessId}", 404)
+    except RenderFailedError as e:
+        db.rollback()
+        raise _error("RENDER_FAILED", str(e), 500)
+    except Exception:
+        db.rollback()
+        raise _error("INTERNAL_SERVER_ERROR", "Unexpected error", 500)
+
+    return _ok({"instructionId": str(instruction_id)})
 
 
 @app.get("/api/v1/instruction/{instruction_id}")
-async def get_instruction(instruction_id: UUID):
+async def get_instruction(instruction_id: UUID, db: Session = Depends(get_db)):
     """Get an AssemblyInstruction by ID. (Contract §7.2)"""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    svc = InstructionService(db)
+    instruction = svc.get_instruction(instruction_id)
+    if instruction is None:
+        raise _error("INSTRUCTION_NOT_FOUND", f"Instruction not found: {instruction_id}", 404)
+
+    return _ok(instruction.model_dump())
 
 
-# === PDF Export (Epic-3 — not implemented yet) ===
+# === PDF Export (Epic-3) ===
 
 
 @app.post("/api/v1/instruction/export-pdf")
-async def export_pdf(request: ExportPdfRequest):
+async def export_pdf(request: ExportPdfRequest, db: Session = Depends(get_db)):
     """Export AssemblyInstruction as PDF. (Contract §8.1)"""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    svc = InstructionService(db)
+    try:
+        pdf_path = svc.export_pdf(request.instructionId)
+        db.commit()
+    except InstructionNotFoundError:
+        db.rollback()
+        raise _error("INSTRUCTION_NOT_FOUND", f"Instruction not found: {request.instructionId}", 404)
+    except PDFExportFailedError as e:
+        db.rollback()
+        raise _error("PDF_EXPORT_FAILED", str(e), 500)
+    except Exception:
+        db.rollback()
+        raise _error("INTERNAL_SERVER_ERROR", "Unexpected error", 500)
+
+    return _ok({"pdfPath": pdf_path})

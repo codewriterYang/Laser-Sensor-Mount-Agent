@@ -25,5 +25,8 @@ Thumbs.db
 # Uploads
 uploads/
 
+# Exports
+exports/
+
 # Environment
 .env

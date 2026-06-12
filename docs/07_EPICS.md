@@ -254,8 +254,9 @@ Commit（Story 级别提交）
 
 # Epic-3：ApprovedProcessGraph 与 AssemblyInstruction
 
-- **状态**：Planning
-- **Phase**：等待 Epic-2 完成后进入 Analysis
+- **状态**：Completed
+- **完成日期**：2026.6.12
+- **Phase**：全部 Story 完成，E2E 通过，文档已更新
 
 ## 目标
 

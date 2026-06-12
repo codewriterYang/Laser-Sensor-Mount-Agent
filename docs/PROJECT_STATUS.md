@@ -11,8 +11,8 @@
 | 项目 | 值 |
 |---|---|
 | **文档版本** | v2.0 |
-| **应用版本** | v0.2.0 |
-| **开发阶段** | Epic-2 完成，准备进入 Epic-3 |
+| **应用版本** | v0.3.0 |
+| **开发阶段** | Epic-3 完成，准备进入 Epic-4 |
 
 ---
 
@@ -22,7 +22,7 @@
 |---|---|---|---|
 | **Epic-1** | STEP 文件解析与 ProductGraph 生成 | ✅ Completed | 2026.6.11 |
 | **Epic-2** | DraftProcessGraph 生成与审核 | ✅ Completed | 2026.6.12 |
-| **Epic-3** | ApprovedProcessGraph 与 AssemblyInstruction | 🔲 Pending | — |
+| **Epic-3** | ApprovedProcessGraph 与 AssemblyInstruction | ✅ Completed | 2026.6.12 |
 | **Epic-4** | MVP 边界与 Demo | 🔲 Pending | — |
 | **Epic-5** | Assembly Knowledge Flywheel | 🔲 Pending（非 MVP） | — |
 
@@ -79,11 +79,24 @@ GET /api/v1/product-graphs/dead → 404
 | Repository | `src/app/repositories/approved_process_repository.py` | ApprovedProcessGraph CRUD |
 | Repository | `src/app/repositories/review_decision_repository.py` | ReviewDecision CRUD |
 
+### Epic-3：ApprovedProcessGraph 与 AssemblyInstruction
+
+**完成日期**：2026.6.12
+**状态**：Completed
+
+**交付成果**：
+
+| 层 | 文件 | 说明 |
+|---|---|---|
+| API | `src/app/main.py` | 3 个 Epic-3 端点（render/get instruction + export PDF） |
+| Service | `src/app/services/instruction_service.py` | 指令渲染（5 种 Section）+ PDF 导出（FPDF2） |
+| Repository | `src/app/repositories/instruction_repository.py` | AssemblyInstruction CRUD |
+
 ---
 
 ## 4. 进行中 Epic
 
-_当前无进行中 Epic。Epic-2 已完成，Epic-3 等待启动。_
+_当前无进行中 Epic。Epic-3 已完成，Epic-4 等待启动。_
 
 ---
 
@@ -110,11 +123,11 @@ _当前无进行中 Epic。Epic-2 已完成，Epic-3 等待启动。_
 
 | 测试类型 | 通过 | 跳过 | 失败 | 说明 |
 |---|---|---|---|---|
-| **Contract Test** | 15 | 5 | 0 | 跳过项为 Epic-3 端点（501） |
-| **Unit Test** | 28 | 0 | 0 | Epic-1 + Epic-2 全部 Service |
-| **Integration Test** | 14 | 0 | 0 | 全部 Repository CRUD |
-| **E2E Test** | 8 | 0 | 0 | Epic-1 + Epic-2 完整链路 |
-| **总计** | **69** | **5** | **0** | |
+| **Contract Test** | 20 | 0 | 0 | 全部 10 个端点覆盖 |
+| **Unit Test** | 36 | 0 | 0 | Epic-1/2/3 全部 Service |
+| **Integration Test** | 17 | 0 | 0 | 全部 6 个 Repository |
+| **E2E Test** | 11 | 0 | 0 | Epic-1/2/3 完整链路 |
+| **总计** | **89** | **0** | **0** | |
 
 **命令**：
 

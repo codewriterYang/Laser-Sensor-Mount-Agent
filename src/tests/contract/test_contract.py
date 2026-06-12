@@ -29,6 +29,17 @@ def _create_draft_process(client: TestClient) -> str:
     return r.json()["data"]["processId"]
 
 
+def _create_approved(client: TestClient) -> str:
+    """Go through full Epic-1+2 to create an ApprovedProcessGraph, return its ID."""
+    process_id = _create_draft_process(client)
+    r = client.get(f"/api/v1/process/{process_id}")
+    steps = r.json()["data"]["steps"]
+    decisions = [{"stepId": s["stepId"], "action": "accept", "reason": "OK"} for s in steps]
+    r = client.post("/api/v1/process/review", json={"processId": process_id, "decisions": decisions})
+    assert r.status_code == 200
+    return r.json()["data"]["approvedProcessId"]
+
+
 # === Epic-1: STEP Analysis ===
 
 
@@ -232,51 +243,66 @@ class TestApprovedProcessGetContract:
 
 
 class TestInstructionRenderContract:
+    """Contract §7.1 — POST /api/v1/instruction/render"""
     def test_render_instruction_returns_instruction_id(self, client: TestClient):
+        approved_id = _create_approved(client)
         response = client.post("/api/v1/instruction/render", json={
-            "approvedProcessId": "00000000-0000-0000-0000-000000000001"
+            "approvedProcessId": approved_id
         })
-        if response.status_code == 501:
-            pytest.skip("Not implemented yet")
-        assert response.status_code == 200
-        assert "instructionId" in response.json()["data"]
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        body = response.json()
+        assert body["success"] is True
+        assert "instructionId" in body["data"]
 
     def test_render_instruction_not_found_returns_error(self, client: TestClient):
         response = client.post("/api/v1/instruction/render", json={
             "approvedProcessId": "00000000-0000-0000-0000-00000000dead"
         })
-        if response.status_code == 501:
-            pytest.skip("Not implemented yet")
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "APPROVED_PROCESS_NOT_FOUND"
 
 
 class TestInstructionGetContract:
+    """Contract §7.2 — GET /api/v1/instruction/{instructionId}"""
     def test_get_instruction_returns_valid_shape(self, client: TestClient):
-        response = client.get("/api/v1/instruction/00000000-0000-0000-0000-000000000001")
-        if response.status_code == 501:
-            pytest.skip("Not implemented yet")
-        if response.status_code == 404:
-            pytest.skip("No seeded data yet")
+        approved_id = _create_approved(client)
+        r = client.post("/api/v1/instruction/render", json={"approvedProcessId": approved_id})
+        instruction_id = r.json()["data"]["instructionId"]
+
+        response = client.get(f"/api/v1/instruction/{instruction_id}")
         assert response.status_code == 200
-        assert "instructionId" in response.json()["data"]
+        body = response.json()
+        assert body["success"] is True
+        data = body["data"]
+        assert data["instructionId"] == instruction_id
+        assert isinstance(data["sections"], list)
+        assert len(data["sections"]) >= 2  # cover + overview + at least one step
+
+    def test_get_instruction_not_found_returns_error(self, client: TestClient):
+        response = client.get("/api/v1/instruction/00000000-0000-0000-0000-00000000dead")
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "INSTRUCTION_NOT_FOUND"
 
 
 class TestPdfExportContract:
+    """Contract §8.1 — POST /api/v1/instruction/export-pdf"""
     def test_export_pdf_returns_path(self, client: TestClient):
+        approved_id = _create_approved(client)
+        r = client.post("/api/v1/instruction/render", json={"approvedProcessId": approved_id})
+        instruction_id = r.json()["data"]["instructionId"]
+
         response = client.post("/api/v1/instruction/export-pdf", json={
-            "instructionId": "00000000-0000-0000-0000-000000000001"
+            "instructionId": instruction_id
         })
-        if response.status_code == 501:
-            pytest.skip("Not implemented yet")
-        assert response.status_code == 200
-        assert "pdfPath" in response.json()["data"]
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        body = response.json()
+        assert body["success"] is True
+        assert "pdfPath" in body["data"]
+        assert body["data"]["pdfPath"].endswith(".pdf")
 
     def test_export_pdf_not_found_returns_error(self, client: TestClient):
         response = client.post("/api/v1/instruction/export-pdf", json={
             "instructionId": "00000000-0000-0000-0000-00000000dead"
         })
-        if response.status_code == 501:
-            pytest.skip("Not implemented yet")
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "INSTRUCTION_NOT_FOUND"
