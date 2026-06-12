@@ -20,6 +20,7 @@ from ..models.orm import DraftProcessGraph
 from ..models.schemas import DraftProcessGraphSchema, StepSchema
 from ..repositories.draft_process_repository import DraftProcessRepository
 from ..repositories.product_graph_repository import ProductGraphRepository
+from .llm_service import LLMService
 
 
 class ProductGraphNotFoundError(Exception):
@@ -55,6 +56,7 @@ class ProcessGenerationService:
         self.db = db
         self.pg_repo = ProductGraphRepository(db)
         self.draft_repo = DraftProcessRepository(db)
+        self.llm = LLMService()
 
     def generate(self, product_graph_id: UUID) -> tuple[UUID, DraftProcessGraphSchema]:
         """Generate a DraftProcessGraph from a ProductGraph.
@@ -76,10 +78,11 @@ class ProcessGenerationService:
         # 2. Apply rule engine to order nodes
         ordered_nodes = self._order_by_rules(nodes, edges)
 
-        # 3. Generate step descriptions
+        # 3. Generate step descriptions (LLM if available, template otherwise)
         steps = self._generate_steps(ordered_nodes, edges)
 
         # 4. Build DraftProcessGraph — use same UUID for schema and DB
+        generated_by = f"llm:{self.llm.model_name}" if self.llm.enabled else "rule_engine"
         process_id = uuid.uuid4()
         draft = DraftProcessGraphSchema(
             processId=process_id,
@@ -93,7 +96,7 @@ class ProcessGenerationService:
             product_graph_id=str(product_graph_id),
             graph_json=draft.model_dump_json(),
             status="reviewing",
-            generated_by="rule_engine",
+            generated_by=generated_by,
         )
         self.draft_repo.save(dpg)
 
@@ -126,66 +129,48 @@ class ProcessGenerationService:
         return ordered
 
     def _generate_steps(self, ordered_nodes: list[dict], edges: list[dict]) -> list[StepSchema]:
-        """Generate assembly steps with natural-language descriptions."""
-        steps = []
-        edge_map = {}  # target → relation, source_name
+        """Generate assembly steps using LLM for text + rule engine for ordering.
+
+        Rule engine determines step order (deterministic).
+        LLM generates title, description, and required tools (generative).
+        Falls back to templates when LLM is unavailable.
+        """
+        # Build edge lookup: target → (relation, source_node_id)
+        edge_map = {}
         for e in edges:
-            target = e["target"]
-            source = e["source"]
             relation = e["relation"]
-            if relation in ("attached_to", "fastened_by"):
-                edge_map[target] = (relation, source)
+            if relation in ("attached_to", "fastened_by", "contains"):
+                edge_map[e["target"]] = (relation, e["source"])
 
         node_map = {n["nodeId"]: n for n in ordered_nodes}
 
-        seq = 1
-        for node in ordered_nodes:
+        steps = []
+        for seq, node in enumerate(ordered_nodes, 1):
             name = node.get("name", "Unknown Part")
+            material = node.get("metadata", {}).get("material", "")
             node_id = node["nodeId"]
-            metadata = node.get("metadata", {})
-            material = metadata.get("material", "")
 
-            # Determine description based on relations
+            # Determine relation and target
+            relation = "contains"
+            target_name = ""
             if node_id in edge_map:
-                rel, target_id = edge_map[node_id]
-                target_name = node_map.get(target_id, {}).get("name", "attached part") if target_id in node_map else "assembly"
+                relation, source_id = edge_map[node_id]
+                target_name = node_map.get(source_id, {}).get("name", "")
 
-                if rel == "fastened_by":
-                    title = f"Fasten {name}"
-                    description = f"Secure the {target_name} using {name}"
-                    if material:
-                        description += f" ({material})"
-                    required_parts = [name, target_name]
-                    required_tools = ["Hex Wrench", "Torque Wrench"]
-                elif rel == "attached_to":
-                    title = f"Attach {name}"
-                    description = f"Mount the {name} onto the {target_name}"
-                    if material:
-                        description += f" ({material})"
-                    required_parts = [name, target_name]
-                    required_tools = ["Hex Wrench"]
-                else:
-                    title = f"Install {name}"
-                    description = f"Install {name}"
-                    required_parts = [name]
-                    required_tools = []
-            else:
-                title = f"Install {name}"
-                description = f"Place the {name} as the base component"
-                if material:
-                    description += f" ({material})"
-                required_parts = [name]
-                required_tools = []
-
-            steps.append(StepSchema(
-                stepId=uuid.uuid4(),
+            step = self.llm.generate_step(
+                part_name=name,
+                part_material=material,
+                relation=relation,
+                target_name=target_name,
                 sequence=seq,
-                title=title,
-                description=description,
-                requiredParts=required_parts,
-                requiredTools=required_tools,
-            ))
-            seq += 1
+            )
+            # Set required parts based on graph data
+            if target_name:
+                step.requiredParts = [name, target_name]
+            else:
+                step.requiredParts = [name]
+
+            steps.append(step)
 
         return steps
 
