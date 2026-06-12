@@ -70,28 +70,51 @@ project-root/
 
 - Commit message 模板：
   ```
-  <Epic-ID>/<Story-ID> <Task-ID> <短描述> [Type]
+  <type>(<scope>): <description>
   ```
 
-Type 可选值：
+- **格式**：Conventional Commits 风格
+- **编码**：description 使用英文，scope 使用 kebab-case
 
-- `feat`: 新增功能
-- `fix`: 修复 bug
-- `refactor`: 重构
-- `test`: 测试相关
-- `docs`: 文档修改
+### type 可选值
 
-示例：
+| type | 说明 |
+|---|---|
+| `feat` | 新增功能 |
+| `fix` | 修复 bug |
+| `refactor` | 重构 |
+| `test` | 测试相关 |
+| `docs` | 文档修改 |
+
+### scope 可选值
+
+| scope | 说明 |
+|---|---|
+| `project` | 项目级别（初始化、基线、配置） |
+| `epic-1` | STEP 文件解析与 ProductGraph |
+| `epic-2` | DraftProcessGraph 生成与审核 |
+| `epic-3` | ApprovedProcessGraph 与 AssemblyInstruction |
+| `epic-4` | MVP 边界与 Demo |
+| `epic-5` | Assembly Knowledge Flywheel |
+
+### 示例
+
 ```
-E1/S1 TASK-001 上传接口实现 feat
-E1/S1 TASK-002 文件持久化 feat
-E1/S1 TASK-003 状态管理测试 test
+docs(project): initialize project baseline
+feat(epic-1): implement STEP file upload and ProductGraph generation
+test(epic-1): verify step analysis workflow
+feat(epic-2): implement DraftProcessGraph generation
+feat(epic-3): implement engineer review workflow
+feat(epic-4): implement assembly instruction generation
+feat(epic-5): implement knowledge flywheel
 ```
 
-规则：
-- 每次 Commit 对应一个 Task
+### 规则
+
+- 每次 Commit 对应一个 Story 或一个完整的逻辑变更
 - Story 内所有 Task 完成后提交最终 Review 到 develop
-- 不允许跨 Story 的混合 Commit
+- 不允许跨 Epic 的混合 Commit
+- description 使用英文祈使句，首字母小写
 
 ---
 
