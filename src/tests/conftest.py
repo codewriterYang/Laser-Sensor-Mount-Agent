@@ -8,8 +8,9 @@ import tempfile
 import pytest
 from fastapi.testclient import TestClient
 
-# Disable LLM during tests — use template fallback for speed and determinism
+# Disable LLM and Image generation during tests — use template fallback for speed and determinism
 os.environ["LLM_API_KEY"] = ""
+os.environ["IMAGE_API_KEY"] = ""
 
 # Temp file database — ensures all connections share the same DB
 _db_file = tempfile.NamedTemporaryFile(suffix=".db", delete=False)

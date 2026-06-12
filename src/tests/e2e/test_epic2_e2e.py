@@ -29,9 +29,9 @@ class TestEpic2EndToEnd:
         assert data["status"] == "reviewing"
         assert len(data["steps"]) == 5
 
-        # Verify domain rules in step order
+        # Verify domain rules in step order — first step should be base/plate
         step_names = [s["title"] for s in data["steps"]]
-        assert any("base" in name.lower() or "plate" in name.lower() for name in step_names[:1])
+        assert any("底" in name or "板" in name for name in step_names[:1])
 
         # 3. Get DraftProcessGraph
         r = client.get(f"/api/v1/process/{process_id}")

@@ -33,12 +33,12 @@ class StepParseFailedError(Exception):
 DEMO_PRODUCT_GRAPH = ProductGraphSchema(
     graphId=UUID("11111111-1111-1111-1111-111111111111"),
     nodes=[
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000001"), nodeType="assembly", name="Laser Sensor Mount Assembly"),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000002"), nodeType="part", name="Base Plate", metadata={"material": "Aluminum 6061", "partNumber": "LSM-BASE-001"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000003"), nodeType="part", name="Bracket", metadata={"material": "Steel", "partNumber": "LSM-BRK-001"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000004"), nodeType="part", name="Laser Sensor", metadata={"partNumber": "LS-2000"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000005"), nodeType="part", name="Screw M4x12", metadata={"material": "Stainless Steel"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000006"), nodeType="part", name="Washer M4", metadata={"material": "Stainless Steel"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000001"), nodeType="assembly", name="激光传感器安装组件"),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000002"), nodeType="part", name="底板", metadata={"material": "铝合金 6061", "partNumber": "LSM-BASE-001"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000003"), nodeType="part", name="支架", metadata={"material": "钢", "partNumber": "LSM-BRK-001"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000004"), nodeType="part", name="激光传感器", metadata={"partNumber": "LS-2000"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000005"), nodeType="part", name="M4x12 螺丝", metadata={"material": "不锈钢"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000006"), nodeType="part", name="M4 垫片", metadata={"material": "不锈钢"}),
     ],
     edges=[
         EdgeSchema(edgeId=UUID("e1000000-0000-0000-0000-000000000001"), source=UUID("a1000000-0000-0000-0000-000000000001"), target=UUID("a1000000-0000-0000-0000-000000000002"), relation="contains"),
@@ -64,7 +64,7 @@ def _build_product_graph_from_parsed(name: str, body_count: int) -> ProductGraph
     Structured so the rule engine can apply domain ordering.
     """
     assembly_id = uuid.uuid4()
-    nodes = [NodeSchema(nodeId=assembly_id, nodeType="assembly", name=f"{name} Assembly")]
+    nodes = [NodeSchema(nodeId=assembly_id, nodeType="assembly", name=f"{name} 装配体")]
     edges = []
 
     # Create part nodes — use known part names if body count matches known patterns
@@ -74,7 +74,7 @@ def _build_product_graph_from_parsed(name: str, body_count: int) -> ProductGraph
         edges.append(EdgeSchema(edgeId=uuid.uuid4(), source=assembly_id, target=part_id, relation="contains"))
     else:
         # Multi-body — create named parts based on count
-        part_types = ["Base Body", "Mounting Feature", "Sensor Interface", "Fastener", "Connector"]
+        part_types = ["主体", "安装座", "传感器接口", "紧固件", "连接器"]
         for i in range(min(body_count, len(part_types))):
             part_id = uuid.uuid4()
             nodes.append(NodeSchema(nodeId=part_id, nodeType="part", name=f"{name} {part_types[i]}"))

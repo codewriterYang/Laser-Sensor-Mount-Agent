@@ -40,6 +40,40 @@ class PDFExportFailedError(Exception):
 
 EXPORTS_DIR = Path("exports")
 
+# CJK font paths to try (in order of preference)
+_CJK_FONT_PATHS = [
+    "C:/Windows/Fonts/msyh.ttc",       # Microsoft YaHei (Windows Chinese)
+    "C:/Windows/Fonts/simhei.ttf",     # SimHei (Windows)
+    "C:/Windows/Fonts/simsun.ttc",     # SimSun (Windows)
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux
+    "/System/Library/Fonts/PingFang.ttc",  # macOS
+]
+
+_cjk_font_path: str | None = None
+
+
+def _get_cjk_font_path() -> str | None:
+    """Find an available CJK TrueType font on the system."""
+    global _cjk_font_path
+    if _cjk_font_path is not None:
+        return _cjk_font_path if _cjk_font_path else None
+    for path in _CJK_FONT_PATHS:
+        if Path(path).exists():
+            _cjk_font_path = path
+            return path
+    _cjk_font_path = ""
+    return None
+
+
+def _make_pdf() -> FPDF:
+    """Create an FPDF instance with CJK font support if available."""
+    pdf = FPDF()
+    cjk_path = _get_cjk_font_path()
+    if cjk_path:
+        pdf.add_font("CJK", "", cjk_path)
+        pdf.add_font("CJK", "B", cjk_path)
+    return pdf
+
 
 class InstructionService:
     """Render AssemblyInstruction from ApprovedProcessGraph and export PDF."""
@@ -74,7 +108,7 @@ class InstructionService:
         instruction_id = uuid.uuid4()
         instruction = AssemblyInstructionSchema(
             instructionId=instruction_id,
-            title=f"Assembly Instructions — {approved.approvedBy}",
+            title=f"装配指导书 — {approved.approvedBy}",
             sections=sections,
         )
 
@@ -94,33 +128,33 @@ class InstructionService:
         sections = [
             SectionSchema(
                 sectionType="cover",
-                content=f"Assembly Instructions\nApproved by: {approved.approvedBy}\nDate: {approved.approvedAt.isoformat()}",
+                content=f"装配指导书\n\n审核人：{approved.approvedBy}\n日期：{approved.approvedAt.isoformat()}",
             ),
             SectionSchema(
                 sectionType="overview",
-                content=f"This document contains {len(approved.steps)} assembly steps for the approved process.",
+                content=f"本指导书包含 {len(approved.steps)} 个装配步骤，请严格按照顺序操作。",
             ),
         ]
 
         for step in approved.steps:
-            parts = ", ".join(step.requiredParts) if step.requiredParts else "None"
-            tools = ", ".join(step.requiredTools) if step.requiredTools else "None"
+            parts = "、".join(step.requiredParts) if step.requiredParts else "无"
+            tools = "、".join(step.requiredTools) if step.requiredTools else "无"
             content = (
-                f"Step {step.sequence}: {step.title}\n\n"
+                f"步骤 {step.sequence}：{step.title}\n\n"
                 f"{step.description}\n\n"
-                f"Required Parts: {parts}\n"
-                f"Required Tools: {tools}"
+                f"所需零件：{parts}\n"
+                f"所需工具：{tools}"
             )
             img_path = image_paths.get(step.sequence)
             sections.append(SectionSchema(sectionType="step", content=content, imagePath=img_path))
 
         sections.append(SectionSchema(
             sectionType="safety",
-            content="Wear appropriate PPE. Follow all safety guidelines. Verify all fasteners are properly torqued.",
+            content="请穿戴适当的个人防护装备（PPE）。遵守所有安全操作规程。确认所有紧固件已按规定扭矩拧紧。",
         ))
         sections.append(SectionSchema(
             sectionType="ending",
-            content=f"End of assembly instructions. Generated at {datetime.now(timezone.utc).isoformat()}",
+            content=f"装配指导书结束。生成时间：{datetime.now(timezone.utc).isoformat()}",
         ))
 
         return sections
@@ -146,30 +180,32 @@ class InstructionService:
             EXPORTS_DIR.mkdir(exist_ok=True)
             pdf_path = EXPORTS_DIR / f"{instruction_id}.pdf"
 
-            pdf = FPDF()
+            pdf = _make_pdf()
+            has_cjk = _get_cjk_font_path() is not None
+            font_name = "CJK" if has_cjk else "Helvetica"
             pdf.set_auto_page_break(auto=True, margin=15)
 
             # Title page
             pdf.add_page()
-            pdf.set_font("Helvetica", "B", 16)
-            pdf.cell(0, 10, "Assembly Instructions", new_x="LMARGIN", new_y="NEXT", align="C")
+            pdf.set_font(font_name, "B", 16)
+            pdf.cell(0, 10, "装配指导书", new_x="LMARGIN", new_y="NEXT", align="C")
             pdf.ln(5)
 
             for section in instruction.sections:
                 if section.sectionType == "cover":
-                    pdf.set_font("Helvetica", "B", 14)
+                    pdf.set_font(font_name, "B", 14)
                     for line in section.content.split("\n"):
                         pdf.cell(0, 8, line.strip(), new_x="LMARGIN", new_y="NEXT", align="C")
                     pdf.ln(5)
                 elif section.sectionType == "overview":
-                    pdf.set_font("Helvetica", "I", 10)
+                    pdf.set_font(font_name, "I" if not has_cjk else "", 10)
                     pdf.cell(0, 8, section.content, new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(3)
                 elif section.sectionType == "step":
-                    pdf.set_font("Helvetica", "B", 11)
+                    pdf.set_font(font_name, "B", 11)
                     lines = section.content.split("\n")
                     pdf.cell(0, 7, lines[0], new_x="LMARGIN", new_y="NEXT")  # Step title
-                    pdf.set_font("Helvetica", "", 10)
+                    pdf.set_font(font_name, "", 10)
                     for line in lines[1:]:
                         if line.strip():
                             pdf.cell(0, 6, f"  {line.strip()}", new_x="LMARGIN", new_y="NEXT")
@@ -184,13 +220,13 @@ class InstructionService:
                             pass  # Skip image if it can't be embedded
                     pdf.ln(4)
                 elif section.sectionType == "safety":
-                    pdf.set_font("Helvetica", "B", 10)
-                    pdf.cell(0, 8, "SAFETY NOTES:", new_x="LMARGIN", new_y="NEXT")
-                    pdf.set_font("Helvetica", "", 10)
+                    pdf.set_font(font_name, "B", 10)
+                    pdf.cell(0, 8, "安全须知：", new_x="LMARGIN", new_y="NEXT")
+                    pdf.set_font(font_name, "", 10)
                     pdf.multi_cell(0, 6, section.content)
                     pdf.ln(3)
                 elif section.sectionType == "ending":
-                    pdf.set_font("Helvetica", "I", 9)
+                    pdf.set_font(font_name, "I" if not has_cjk else "", 9)
                     pdf.cell(0, 8, section.content, new_x="LMARGIN", new_y="NEXT", align="C")
 
             pdf.output(str(pdf_path))
