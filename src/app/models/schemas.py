@@ -124,6 +124,7 @@ class RenderInstructionData(BaseModel):
 class SectionSchema(BaseModel):
     sectionType: str  # cover | overview | step | safety | ending
     content: str
+    imagePath: str | None = None
 
 
 class AssemblyInstructionSchema(BaseModel):

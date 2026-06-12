@@ -1,6 +1,6 @@
 # PROJECT_STATUS — 项目状态追踪
 
-版本：v1.0
+版本：v2.0
 状态：Accepted
 最后更新：2026.6.12
 
@@ -11,151 +11,112 @@
 | 项目 | 值 |
 |---|---|
 | **文档版本** | v2.0 |
-| **应用版本** | v0.3.0 |
-| **开发阶段** | Epic-3 完成，准备进入 Epic-4 |
+| **应用版本** | v0.4.0 |
+| **开发阶段** | Epic-1~4 MVP 核心闭环完成 |
 
 ---
 
 ## 2. Epic 状态总览
 
-| Epic | 名称 | 状态 | 完成日期 |
+| Epic | 名称 | 实际判定 | 完成日期 |
 |---|---|---|---|
-| **Epic-1** | STEP 文件解析与 ProductGraph 生成 | ✅ Completed | 2026.6.11 |
-| **Epic-2** | DraftProcessGraph 生成与审核 | ✅ Completed | 2026.6.12 |
-| **Epic-3** | ApprovedProcessGraph 与 AssemblyInstruction | ✅ Completed | 2026.6.12 |
-| **Epic-4** | MVP 边界与 Demo | ✅ Completed | 2026.6.12 |
+| **Epic-1** | STEP 文件解析与 ProductGraph 生成 | ✅ COMPLETE | 2026.6.12 |
+| **Epic-2** | DraftProcessGraph 生成与审核 | ✅ COMPLETE | 2026.6.12 |
+| **Epic-3** | ApprovedProcessGraph 与 AssemblyInstruction | ✅ COMPLETE | 2026.6.12 |
+| **Epic-4** | MVP 边界与 Demo | ✅ COMPLETE | 2026.6.12 |
 | **Epic-5** | Assembly Knowledge Flywheel | ⏸️ Deferred（非 MVP） | — |
 
 ---
 
-## 3. 已完成 Epic
+## 3. 本轮交付成果 (Phase 3: MVP 核心闭环)
 
-### Epic-1：STEP 文件解析与 ProductGraph 生成
+### 真实 STEP 解析器
+- **文件**：`src/app/services/step_parser.py`
+- **功能**：ISO 10303-21 实体解析，提取 PRODUCT 名称/几何体数量/装配检测
+- **验证**：成功解析 ILD1x20-100.step（10 个 MANIFOLD_SOLID_BREP 几何体）
+- **集成**：`StepAnalysisService.analyze()` 使用真实解析器
 
-**完成日期**：2026.6.11
-**状态**：Completed
+### 图片生成服务
+- **文件**：`src/app/services/image_service.py`
+- **功能**：Doubao Seedream 4.5 图像生成（OpenAI-compatible API）
+- **集成**：`InstructionService` 为每步生成装配示意图，嵌入 PDF
 
-**交付成果**：
+### 前端 SPA
+- **文件**：`src/app/static/index.html`
+- **功能**：5 步工作流 — Upload → ProductGraph → DraftProcess → Review → PDF
+- **路由**：`GET /` → 前端页面，`/static` → 静态资源
+
+---
+
+## 4. API 端点清单（全部 10 个）
+
+| # | 端点 | 方法 | 状态 |
+|---|---|---|---|
+| 1 | /api/v1/step/analyze | POST | ✅ |
+| 2 | /api/v1/product-graphs/{id} | GET | ✅ |
+| 3 | /api/v1/process/generate | POST | ✅ |
+| 4 | /api/v1/process/{id} | GET | ✅ |
+| 5 | /api/v1/process/review | POST | ✅ |
+| 6 | /api/v1/approved-process/{id} | GET | ✅ |
+| 7 | /api/v1/instruction/render | POST | ✅ |
+| 8 | /api/v1/instruction/{id} | GET | ✅ |
+| 9 | /api/v1/instruction/export-pdf | POST | ✅ |
+| 10 | / (前端 SPA) | GET | ✅ |
+
+---
+
+## 5. 工程交付物
 
 | 层 | 文件 | 说明 |
 |---|---|---|
-| API | `src/app/main.py` | POST /api/v1/step/analyze + GET /api/v1/product-graphs/{id} |
-| Service | `src/app/services/step_analysis_service.py` | MVP Demo ProductGraph + 状态机 |
-| Repository | `src/app/repositories/step_file_repository.py` | StepFile CRUD + 状态管理 |
-| Repository | `src/app/repositories/product_graph_repository.py` | ProductGraph CRUD + 状态管理 |
-| Schema | `src/app/models/schemas.py` | 完整 Pydantic Schema（匹配 05_CONTRACT.md） |
-| ORM | `src/app/models/orm.py` | 6 张表 SQLAlchemy 模型 |
-| Database | `src/app/database.py` | SQLite 引擎 + Session 工厂 |
+| API | `src/app/main.py` | FastAPI 应用 + 静态文件服务 |
+| Step Parser | `src/app/services/step_parser.py` | **NEW** 真实 ISO 10303-21 解析器 |
+| Step Analysis | `src/app/services/step_analysis_service.py` | 集成真实解析器 |
+| Process Gen | `src/app/services/process_generation_service.py` | 规则引擎 + LLM |
+| LLM | `src/app/services/llm_service.py` | DeepSeek 文本生成 |
+| Review | `src/app/services/review_service.py` | 工程师审核处理 |
+| Instruction | `src/app/services/instruction_service.py` | 渲染 + 图片 + PDF |
+| Image | `src/app/services/image_service.py` | **NEW** Doubao 图片生成 |
+| Frontend | `src/app/static/index.html` | **NEW** SPA 前端 |
+| ORM | `src/app/models/orm.py` | 6 张表 SQLAlchemy |
+| Schema | `src/app/models/schemas.py` | Pydantic（SectionSchema 新增 imagePath） |
+| Repositories | `src/app/repositories/` (6 files) | CRUD 持久化 |
+| Config | `src/app/config.py` | LLM + Image 配置 |
 
-**E2E 验证结果**：
+---
 
-```
-POST /api/v1/step/analyze → 200
-  stepFileId: <uuid>
-  productGraphId: <uuid>
-  status: parsed
+## 6. 测试结果
 
-GET /api/v1/product-graphs/{id} → 200
-  nodes: 6（1 assembly + 5 parts）
-  edges: 8（contains / attached_to / fastened_by）
-
-GET /api/v1/product-graphs/dead → 404
-  error: PRODUCT_GRAPH_NOT_FOUND
-```
-
-### Epic-2：DraftProcessGraph 生成与审核
-
-**完成日期**：2026.6.12
-**状态**：Completed
-
-**交付成果**：
-
-| 层 | 文件 | 说明 |
+| 测试类型 | 通过 | 说明 |
 |---|---|---|
-| API | `src/app/main.py` | 4 个 Epic-2 端点（generate/get process + review/get approved） |
-| Service | `src/app/services/process_generation_service.py` | 规则引擎（5 条装配规则）+ 步骤生成 |
-| Service | `src/app/services/review_service.py` | 审核处理（accept/modify/delete/insert） |
-| Repository | `src/app/repositories/draft_process_repository.py` | DraftProcessGraph CRUD |
-| Repository | `src/app/repositories/approved_process_repository.py` | ApprovedProcessGraph CRUD |
-| Repository | `src/app/repositories/review_decision_repository.py` | ReviewDecision CRUD |
+| **Contract Test** | 20 | Epic-1~3 全部端点 |
+| **Unit Test** | 43 | Epic-1/2/3 Service + **StepParser (7 new)** |
+| **Integration Test** | 17 | 全部 6 个 Repository |
+| **E2E Test** | 22 | Epic-1/2/3/4 完整链路 |
+| **总计** | **102** | **0 failed, 0 skipped** |
 
-### Epic-3：ApprovedProcessGraph 与 AssemblyInstruction
-
-**完成日期**：2026.6.12
-**状态**：Completed
-
-**交付成果**：
-
-| 层 | 文件 | 说明 |
-|---|---|---|
-| API | `src/app/main.py` | 3 个 Epic-3 端点（render/get instruction + export PDF） |
-| Service | `src/app/services/instruction_service.py` | 指令渲染（5 种 Section）+ PDF 导出（FPDF2） |
-| Repository | `src/app/repositories/instruction_repository.py` | AssemblyInstruction CRUD |
+**E2E 验证**：使用真实 ILD1x20-100.step 完成完整链路 → PDF 输出成功。
 
 ---
 
-## 4. 进行中 Epic
+## 7. 文档一致性状态
 
-_当前无进行中 Epic。Epic-3 已完成，Epic-4 等待启动。_
-
----
-
-## 5. 待开发 Epic
-
-### Epic-3：ApprovedProcessGraph 与 AssemblyInstruction
-- Feature-1：ApprovedProcessGraph 生成
-- Feature-2：Instruction Service（PDF 渲染）
-- 预计 Task 数：13
-
-### Epic-4：MVP 边界与 Demo
-- Feature-1：End-to-End Workflow 验证
-- Feature-2：MVP Scope 验证
-- 预计 Task 数：9
-
-### Epic-5：Assembly Knowledge Flywheel（非 MVP）
-- 预计 Task 数：15
-
----
-
-## 6. 最新测试结果
-
-**测试执行时间**：2026.6.12
-
-| 测试类型 | 通过 | 跳过 | 失败 | 说明 |
-|---|---|---|---|---|
-| **Contract Test** | 20 | 0 | 0 | 全部 10 个端点覆盖 |
-| **Unit Test** | 36 | 0 | 0 | Epic-1/2/3 全部 Service |
-| **Integration Test** | 17 | 0 | 0 | 全部 6 个 Repository |
-| **E2E Test** | 17 | 0 | 0 | Epic-1/2/3/4 完整链路 |
-| **总计** | **95** | **0** | **0** | |
-
-**命令**：
-
-```bash
-python -m pytest src/tests/ -v
-# 69 passed, 5 skipped in 3.79s
-```
-
----
-
-## 7. 下一步行动
-
-| 优先级 | 行动 | 说明 |
-|---|---|---|
-| **P0** | 启动 Epic-3 Analysis | 对照 Architecture / Contract / Domain 分析 Epic-3 范围 |
-| **P0** | 输出 Epic-3 Implementation Plan | 按 Feature → Story → Task 拆解 |
-| **P1** | 实现 ApprovedProcessGraph | Feature-1：正式流程生成 |
-| **P1** | 实现 Instruction Service | Feature-2：PDF 渲染 |
-| **P2** | 更新 PROJECT_STATUS.md | Epic-3 启动后同步更新 |
-
----
-
-## 8. 文档一致性状态
-
-| 检查项 | 状态 |
+| 文档 | 状态 |
 |---|---|
-| CLAUDE.md ↔ PROJECT_STATUS.md ↔ 07_EPICS.md | ✅ 一致 |
-| Epic-1 状态：三份文档均为 Completed | ✅ |
-| Epic-2 状态：三份文档均为 Completed | ✅ |
-| 开发流程：三份文档均为 Epic-Driven | ✅ |
-| 提交粒度：Conventional Commits | ✅ |
+| 01_PRD.md ↔ 实际 | ✅ |
+| 03_ARCHITECTURE.md ↔ 实际 | ✅（Review UI 已实现为前端 SPA） |
+| 05_CONTRACT.md ↔ 实际 | ✅ |
+| 06_DATABASE.md ↔ 实际 | ✅ |
+| 07_EPICS.md ↔ PROJECT_STATUS.md | ✅ |
+| CLAUDE.md commit 格式 | ✅ 已修正 |
+| .env.example | ✅ 已修正 IMAGE_API_KEY |
+
+---
+
+## 8. 技术债（已知）
+
+| # | 项 | 严重度 |
+|---|---|---|
+| 1 | FastAPI `on_event` 已弃用 | Low |
+| 2 | 无 Alembic 迁移 | Low |
+| 3 | 无显式数据库索引 | Low |

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laser Sensor Mount Assembly Agent</title>
+<style>
+:root {
+  --bg: #f5f7fa; --card: #fff; --primary: #2563eb; --danger: #dc2626;
+  --success: #16a34a; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.container { max-width: 960px; margin: 0 auto; padding: 20px; }
+h1 { font-size: 1.5rem; margin-bottom: 8px; }
+h2 { font-size: 1.1rem; margin-bottom: 12px; color: var(--primary); }
+.subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+
+/* Stepper */
+.stepper { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.step-dot { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; background: var(--border); color: var(--muted); font-weight: 600; }
+.step-dot.active { background: var(--primary); color: #fff; }
+.step-dot.done { background: var(--success); color: #fff; }
+
+/* Cards */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.card h3 { font-size: 0.95rem; margin-bottom: 12px; }
+
+/* Buttons */
+.btn { padding: 8px 18px; border: none; border-radius: var(--radius); font-size: 0.9rem; cursor: pointer; font-weight: 600; transition: .15s; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 0.8rem; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Upload zone */
+.upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
+.upload-zone:hover { border-color: var(--primary); background: #f0f4ff; }
+.upload-zone input { display: none; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th { text-align: left; padding: 8px; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.8rem; text-transform: uppercase; }
+td { padding: 8px; border-bottom: 1px solid var(--border); }
+tr:hover { background: #f8fafc; }
+
+/* JSON view */
+.json-view { background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: var(--radius); font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; max-height: 300px; overflow: auto; white-space: pre-wrap; }
+
+/* Review */
+.review-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.review-row .step-info { flex: 1; }
+.review-row select { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); }
+
+/* Buttons row */
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* Badge */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.badge-success { background: #dcfce7; color: #166534; }
+.badge-warn { background: #fef9c3; color: #854d0e; }
+.badge-error { background: #fee2e2; color: #991b1b; }
+
+/* Toast */
+.toast { position: fixed; top: 16px; right: 16px; padding: 12px 20px; border-radius: var(--radius); color: #fff; font-weight: 600; z-index: 999; animation: fadeIn .3s; }
+.toast.error { background: var(--danger); }
+.toast.success { background: var(--success); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Laser Sensor Mount Assembly Agent</h1>
+  <p class="subtitle">STEP CAD → ProductGraph → Process → Review → PDF</p>
+
+  <!-- Stepper -->
+  <div class="stepper">
+    <span class="step-dot" id="s1">1. Upload STEP</span>
+    <span class="step-dot" id="s2">2. ProductGraph</span>
+    <span class="step-dot" id="s3">3. Generate Process</span>
+    <span class="step-dot" id="s4">4. Review</span>
+    <span class="step-dot" id="s5">5. Instruction & PDF</span>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="card" id="card-upload">
+    <h3>Upload STEP File</h3>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <p>Click or drag .step file here</p>
+      <p style="color:var(--muted);font-size:0.8rem;">Supported: ISO 10303-21 (AP203/AP214)</p>
+      <input type="file" id="file-input" accept=".step,.stp" onchange="uploadFile()">
+    </div>
+    <div id="upload-status" style="margin-top:8px;"></div>
+  </div>
+
+  <!-- Step 2: ProductGraph -->
+  <div class="card" id="card-graph" style="display:none;">
+    <h3>ProductGraph <span id="pg-status" class="badge badge-success"></span></h3>
+    <div id="pg-content"></div>
+  </div>
+
+  <!-- Step 3: Generate Process -->
+  <div class="card" id="card-generate" style="display:none;">
+    <h3>Draft Process Graph</h3>
+    <button class="btn btn-primary" id="btn-generate" onclick="generateProcess()">Generate DraftProcessGraph</button>
+    <div id="draft-content" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- Step 4: Review -->
+  <div class="card" id="card-review" style="display:none;">
+    <h3>Engineer Review</h3>
+    <div id="review-steps"></div>
+    <div class="actions">
+      <button class="btn btn-success" id="btn-submit" onclick="submitReview()">Submit Review</button>
+    </div>
+    <div id="review-result" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- Step 5: Instruction & PDF -->
+  <div class="card" id="card-instruction" style="display:none;">
+    <h3>Assembly Instruction</h3>
+    <button class="btn btn-primary" id="btn-render" onclick="renderInstruction()">Render Instruction</button>
+    <button class="btn btn-success" id="btn-pdf" onclick="exportPdf()" style="display:none;">Export PDF</button>
+    <div id="instruction-content" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1';
+let state = { stepFileId: null, productGraphId: null, processId: null, steps: [], approvedId: null, instructionId: null };
+
+function toast(msg, type='success') {
+  const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+}
+
+function setStep(n) {
+  for (let i=1; i<=5; i++) {
+    const el = document.getElementById(`s${i}`);
+    el.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+}
+
+// Step 1: Upload
+async function uploadFile() {
+  const file = document.getElementById('file-input').files[0];
+  if (!file) return;
+
+  const zone = document.getElementById('upload-zone');
+  zone.innerHTML = '<div class="spinner"></div> Analyzing STEP file...';
+
+  const form = new FormData(); form.append('file', file);
+  try {
+    const r = await fetch(`${API}/step/analyze`, { method: 'POST', body: form });
+    const data = await r.json();
+    if (!data.success) { toast(data.error.message, 'error'); zone.innerHTML = '<p>Click or drag .step file here</p>'; return; }
+
+    state.productGraphId = data.data.productGraphId;
+    state.stepFileId = data.data.stepFileId;
+    document.getElementById('upload-status').innerHTML = `<span class="badge badge-success">Parsed: ${file.name}</span>`;
+    setStep(2);
+    loadProductGraph();
+  } catch(e) { toast('Upload failed: ' + e.message, 'error'); zone.innerHTML = '<p>Click or drag .step file here</p>'; }
+}
+
+// Step 2: ProductGraph
+async function loadProductGraph() {
+  try {
+    const r = await fetch(`${API}/product-graphs/${state.productGraphId}`);
+    const data = await r.json();
+    const pg = data.data;
+    document.getElementById('pg-status').textContent = `${pg.nodes.length} nodes, ${pg.edges.length} edges`;
+    document.getElementById('pg-content').innerHTML =
+      `<details><summary>Nodes (${pg.nodes.length})</summary><table><tr><th>Type</th><th>Name</th></tr>` +
+      pg.nodes.map(n => `<tr><td>${n.nodeType}</td><td>${n.name}</td></tr>`).join('') + '</table></details>' +
+      `<details style="margin-top:8px;"><summary>Edges (${pg.edges.length})</summary><div class="json-view">${JSON.stringify(pg.edges, null, 2)}</div></details>`;
+    document.getElementById('card-graph').style.display = '';
+    document.getElementById('card-generate').style.display = '';
+    setStep(2);
+  } catch(e) { toast('Failed to load ProductGraph: ' + e.message, 'error'); }
+}
+
+// Step 3: Generate Process
+async function generateProcess() {
+  document.getElementById('btn-generate').disabled = true;
+  document.getElementById('btn-generate').innerHTML = '<span class="spinner"></span> Generating...';
+
+  try {
+    const r = await fetch(`${API}/process/generate`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({productGraphId: state.productGraphId})
+    });
+    const data = await r.json();
+    if (!data.success) { toast(data.error.message, 'error'); return; }
+
+    state.processId = data.data.processId;
+    state.steps = data.data.steps;
+    document.getElementById('draft-content').innerHTML =
+      `<p>Status: <span class="badge badge-warn">${data.data.status}</span> — ${state.steps.length} steps generated</p>` +
+      `<table><tr><th>#</th><th>Title</th><th>Description</th></tr>` +
+      state.steps.map(s => `<tr><td>${s.sequence}</td><td>${s.title}</td><td>${s.description}</td></tr>`).join('') + '</table>';
+    document.getElementById('card-review').style.display = '';
+    buildReviewUI();
+    setStep(3);
+  } catch(e) { toast('Generate failed: ' + e.message, 'error'); }
+  finally { document.getElementById('btn-generate').disabled = false; document.getElementById('btn-generate').textContent = 'Generate DraftProcessGraph'; }
+}
+
+// Step 4: Review
+function buildReviewUI() {
+  document.getElementById('review-steps').innerHTML = state.steps.map(s => `
+    <div class="review-row">
+      <span style="font-weight:600;">${s.sequence}.</span>
+      <div class="step-info"><strong>${s.title}</strong><br><small style="color:var(--muted)">${s.description}</small></div>
+      <select id="action-${s.stepId}">
+        <option value="accept">Accept</option>
+        <option value="modify">Modify</option>
+        <option value="delete">Delete</option>
+      </select>
+      <input id="reason-${s.stepId}" placeholder="Reason (optional)" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;width:150px;">
+    </div>
+  `).join('');
+  setStep(4);
+}
+
+async function submitReview() {
+  const decisions = state.steps.map(s => ({
+    stepId: s.stepId,
+    action: document.getElementById(`action-${s.stepId}`).value,
+    reason: document.getElementById(`reason-${s.stepId}`).value || 'OK'
+  }));
+
+  try {
+    const r = await fetch(`${API}/process/review`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({processId: state.processId, decisions})
+    });
+    const data = await r.json();
+    if (!data.success) { toast(data.error.message, 'error'); return; }
+
+    state.approvedId = data.data.approvedProcessId;
+    document.getElementById('review-result').innerHTML =
+      `<span class="badge badge-success">Approved: ${state.approvedId}</span>`;
+    document.getElementById('card-instruction').style.display = '';
+    setStep(5);
+  } catch(e) { toast('Review failed: ' + e.message, 'error'); }
+}
+
+// Step 5: Instruction & PDF
+async function renderInstruction() {
+  document.getElementById('btn-render').disabled = true;
+  document.getElementById('btn-render').innerHTML = '<span class="spinner"></span> Rendering...';
+
+  try {
+    const r = await fetch(`${API}/instruction/render`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({approvedProcessId: state.approvedId})
+    });
+    const data = await r.json();
+    if (!data.success) { toast(data.error.message, 'error'); return; }
+
+    state.instructionId = data.data.instructionId;
+
+    // Get instruction details
+    const r2 = await fetch(`${API}/instruction/${state.instructionId}`);
+    const d2 = await r2.json();
+    const sections = d2.data.sections;
+
+    document.getElementById('instruction-content').innerHTML =
+      `<p>Instruction ID: <code>${state.instructionId}</code></p>` +
+      `<table><tr><th>Type</th><th>Content</th></tr>` +
+      sections.map(s => `<tr><td><span class="badge ${s.sectionType==='step'?'badge-success':'badge-warn'}">${s.sectionType}</span></td><td style="white-space:pre-wrap;">${s.content.substring(0,100)}${s.content.length>100?'...':''}${s.imagePath?' 📷':''}</td></tr>`).join('') + '</table>';
+
+    document.getElementById('btn-pdf').style.display = '';
+    toast('Instruction rendered successfully');
+  } catch(e) { toast('Render failed: ' + e.message, 'error'); }
+  finally { document.getElementById('btn-render').disabled = false; document.getElementById('btn-render').textContent = 'Render Instruction'; }
+}
+
+async function exportPdf() {
+  document.getElementById('btn-pdf').disabled = true;
+  document.getElementById('btn-pdf').innerHTML = '<span class="spinner"></span> Exporting...';
+
+  try {
+    const r = await fetch(`${API}/instruction/export-pdf`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({instructionId: state.instructionId})
+    });
+    const data = await r.json();
+    if (!data.success) { toast(data.error.message, 'error'); return; }
+
+    document.getElementById('instruction-content').innerHTML +=
+      `<p style="margin-top:8px;"><span class="badge badge-success">PDF exported:</span> <code>${data.data.pdfPath}</code></p>`;
+    toast('PDF exported: ' + data.data.pdfPath);
+  } catch(e) { toast('PDF export failed: ' + e.message, 'error'); }
+  finally { document.getElementById('btn-pdf').disabled = false; document.getElementById('btn-pdf').textContent = 'Export PDF'; }
+}
+
+// Drag & drop
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--primary)'; });
+zone.addEventListener('dragleave', () => zone.style.borderColor = 'var(--border)');
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.style.borderColor = 'var(--border)';
+  document.getElementById('file-input').files = e.dataTransfer.files;
+  uploadFile();
+});
+</script>
+</body>
+</html>

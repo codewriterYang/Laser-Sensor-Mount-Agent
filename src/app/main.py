@@ -9,8 +9,11 @@ import json
 from datetime import datetime, timezone
 from uuid import UUID
 
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from .database import create_tables, get_db
@@ -56,6 +59,17 @@ from .services.step_analysis_service import (
 )
 
 app = FastAPI(title="Laser Sensor Mount Assembly Agent", version="0.1.0")
+
+# Static files for frontend
+_static_dir = Path(__file__).parent / "static"
+_static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
+
+@app.get("/")
+async def root():
+    """Serve the frontend SPA."""
+    return FileResponse(str(_static_dir / "index.html"))
 
 
 @app.exception_handler(HTTPException)

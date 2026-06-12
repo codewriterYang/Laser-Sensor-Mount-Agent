@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,10 +16,10 @@ from ..models.schemas import (
     ApprovedProcessGraphSchema,
     AssemblyInstructionSchema,
     SectionSchema,
-    StepSchema,
 )
 from ..repositories.approved_process_repository import ApprovedProcessRepository
 from ..repositories.instruction_repository import InstructionRepository
+from .image_service import ImageService
 
 
 class ApprovedProcessNotFoundError(Exception):
@@ -49,6 +48,7 @@ class InstructionService:
         self.db = db
         self.approved_repo = ApprovedProcessRepository(db)
         self.instruction_repo = InstructionRepository(db)
+        self.image_service = ImageService()
 
     def render(self, approved_process_id: UUID) -> tuple[UUID, AssemblyInstructionSchema]:
         """Render an AssemblyInstruction from an ApprovedProcessGraph.
@@ -62,8 +62,14 @@ class InstructionService:
         data = json.loads(apg.graph_json)
         approved = ApprovedProcessGraphSchema(**data)
 
-        # Build sections
-        sections = self._build_sections(approved)
+        # Generate images for each step (non-blocking — continues on failure)
+        step_dicts = [s.model_dump() for s in approved.steps]
+        image_paths = {}
+        if self.image_service.enabled:
+            image_paths = self.image_service.generate_all_step_images(step_dicts)
+
+        # Build sections with image paths
+        sections = self._build_sections(approved, image_paths)
 
         instruction_id = uuid.uuid4()
         instruction = AssemblyInstructionSchema(
@@ -81,7 +87,10 @@ class InstructionService:
 
         return instruction_id, instruction
 
-    def _build_sections(self, approved: ApprovedProcessGraphSchema) -> list[SectionSchema]:
+    def _build_sections(
+        self, approved: ApprovedProcessGraphSchema, image_paths: dict[int, str] | None = None
+    ) -> list[SectionSchema]:
+        image_paths = image_paths or {}
         sections = [
             SectionSchema(
                 sectionType="cover",
@@ -102,7 +111,8 @@ class InstructionService:
                 f"Required Parts: {parts}\n"
                 f"Required Tools: {tools}"
             )
-            sections.append(SectionSchema(sectionType="step", content=content))
+            img_path = image_paths.get(step.sequence)
+            sections.append(SectionSchema(sectionType="step", content=content, imagePath=img_path))
 
         sections.append(SectionSchema(
             sectionType="safety",
@@ -124,7 +134,7 @@ class InstructionService:
         return AssemblyInstructionSchema(**data)
 
     def export_pdf(self, instruction_id: UUID) -> str:
-        """Export an AssemblyInstruction as PDF. Returns the file path."""
+        """Export an AssemblyInstruction as PDF with embedded images. Returns the file path."""
         ai = self.instruction_repo.get_by_id(instruction_id)
         if ai is None:
             raise InstructionNotFoundError(instruction_id)
@@ -138,9 +148,9 @@ class InstructionService:
 
             pdf = FPDF()
             pdf.set_auto_page_break(auto=True, margin=15)
-            pdf.add_page()
 
-            # Title
+            # Title page
+            pdf.add_page()
             pdf.set_font("Helvetica", "B", 16)
             pdf.cell(0, 10, "Assembly Instructions", new_x="LMARGIN", new_y="NEXT", align="C")
             pdf.ln(5)
@@ -163,6 +173,15 @@ class InstructionService:
                     for line in lines[1:]:
                         if line.strip():
                             pdf.cell(0, 6, f"  {line.strip()}", new_x="LMARGIN", new_y="NEXT")
+                    pdf.ln(2)
+
+                    # Embed step image if available
+                    if section.imagePath and Path(section.imagePath).exists():
+                        try:
+                            pdf.image(section.imagePath, x=20, w=170)
+                            pdf.ln(4)
+                        except Exception:
+                            pass  # Skip image if it can't be embedded
                     pdf.ln(4)
                 elif section.sectionType == "safety":
                     pdf.set_font("Helvetica", "B", 10)
@@ -175,8 +194,6 @@ class InstructionService:
                     pdf.cell(0, 8, section.content, new_x="LMARGIN", new_y="NEXT", align="C")
 
             pdf.output(str(pdf_path))
-
-            # Update DB record with PDF path
             ai.pdf_path = str(pdf_path)
             self.db.flush()
 
