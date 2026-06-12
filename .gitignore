@@ -30,3 +30,5 @@ exports/
 
 # Environment
 .env
+logs/
+exports/
