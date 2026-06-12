@@ -13,7 +13,7 @@ from ..models.orm import ProductGraph, StepFile
 from ..models.schemas import EdgeSchema, NodeSchema, ProductGraphSchema
 from ..repositories.product_graph_repository import ProductGraphRepository
 from ..repositories.step_file_repository import StepFileRepository
-from .step_parser import parse_step_bytes
+from .step_parser import ParsedProduct, parse_step_bytes
 
 
 class StepFileNotFoundError(Exception):
@@ -31,7 +31,7 @@ class StepParseFailedError(Exception):
     pass
 
 
-# --- 演示用 ProductGraph（测试文件或无法解析时的回退数据）---
+# --- 演示用 ProductGraph（仅用于测试桩文件 / 无可识别内容的 STEP）---
 
 DEMO_PRODUCT_GRAPH = ProductGraphSchema(
     graphId=UUID("11111111-1111-1111-1111-111111111111"),
@@ -59,30 +59,52 @@ DEMO_PRODUCT_GRAPH = ProductGraphSchema(
 UPLOAD_DIR = Path("uploads")
 
 
-def _build_product_graph_from_parsed(name: str, body_count: int) -> ProductGraphSchema:
+def _build_product_graph(parsed: ParsedProduct) -> ProductGraphSchema:
     """从 STEP 解析结果构建 ProductGraph。
 
-    单几何体文件：1 个装配体节点 + 1 个零件节点。
-    多几何体文件：1 个装配体节点 + N 个零件节点（按类型命名）。
-    结构设计使得规则引擎可以正确应用领域规则排序。
+    所有节点和边均来自实际解析数据，不做任何假零件：
+    - 单零件文件：1 个装配体节点 + 1 个零件节点
+    - 装配体文件：1 个根装配体 + N 个真实子零件节点
+    - 零件名使用真实产品名，不带 "Assembly"/"装配体" 后缀
     """
     assembly_id = uuid.uuid4()
-    # 提取纯产品名（去除英文后缀）
-    clean_name = name.split("_")[0] if "_" in name else name
-    nodes = [NodeSchema(nodeId=assembly_id, nodeType="assembly", name=f"{clean_name} 装配体")]
-    edges = []
+    nodes: list[NodeSchema] = []
+    edges: list[EdgeSchema] = []
 
-    if body_count <= 1:
+    # 装配体根节点 — 带包围盒尺寸（如果解析得出）
+    root_meta: dict = {}
+    if parsed.length > 0:
+        root_meta = {"length": parsed.length, "width": parsed.width, "height": parsed.height}
+    nodes.append(NodeSchema(
+        nodeId=assembly_id, nodeType="assembly",
+        name=parsed.name, quantity=1,
+        metadata=root_meta,
+    ))
+
+    # 真实子零件节点（从 STEP 文件中实际解析得出）
+    for part in parsed.parts:
         part_id = uuid.uuid4()
-        nodes.append(NodeSchema(nodeId=part_id, nodeType="part", name=clean_name))
-        edges.append(EdgeSchema(edgeId=uuid.uuid4(), source=assembly_id, target=part_id, relation="contains"))
-    else:
-        # 多几何体零件 — 按类型创建带中文名的零件节点
-        part_types = ["主体", "安装座", "传感器接口", "紧固件", "连接器"]
-        for i in range(min(body_count, len(part_types))):
-            part_id = uuid.uuid4()
-            nodes.append(NodeSchema(nodeId=part_id, nodeType="part", name=part_types[i]))
-            edges.append(EdgeSchema(edgeId=uuid.uuid4(), source=assembly_id, target=part_id, relation="contains"))
+        part_meta: dict = {}
+        if part.body_count > 0:
+            part_meta["bodyCount"] = part.body_count
+        if part.length > 0:
+            part_meta["length"] = part.length
+            part_meta["width"] = part.width
+            part_meta["height"] = part.height
+
+        nodes.append(NodeSchema(
+            nodeId=part_id,
+            nodeType="assembly" if part.is_assembly else "part",
+            name=part.name,
+            quantity=1,
+            metadata=part_meta,
+        ))
+        edges.append(EdgeSchema(
+            edgeId=uuid.uuid4(),
+            source=assembly_id,
+            target=part_id,
+            relation="contains",
+        ))
 
     return ProductGraphSchema(graphId=uuid.uuid4(), nodes=nodes, edges=edges)
 
@@ -135,14 +157,13 @@ class StepAnalysisService:
         self.step_repo.update_status(step_file_id, "parsing")
 
         try:
-            # 优先尝试真实 STEP 解析
+            # 用真实解析器解析 STEP 文件内容
             parsed = parse_step_bytes(content)
 
-            # 如果提取到有意义的名称且文件不是测试桩，则使用真实数据
-            if parsed.name and parsed.name != "Unknown" and file_size > 100:
-                pg = _build_product_graph_from_parsed(parsed.name, parsed.body_count)
+            # 判断是否解析出了有效数据：有产品名 且 不是测试桩文件
+            if parsed.name and parsed.name != "未知" and file_size > 100:
+                pg = _build_product_graph(parsed)
             else:
-                # 测试文件回退到 DEMO
                 pg = DEMO_PRODUCT_GRAPH.model_copy(deep=True)
                 pg.graphId = uuid.uuid4()
 

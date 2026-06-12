@@ -49,7 +49,8 @@ class TestStepParser:
 
     def test_parse_body_count(self):
         result = parse_step_bytes(MINIMAL_STEP)
-        assert result.body_count == 1
+        assert len(result.parts) == 1
+        assert result.parts[0].body_count == 1
 
     def test_parse_is_not_assembly(self):
         result = parse_step_bytes(MINIMAL_STEP)
@@ -58,7 +59,7 @@ class TestStepParser:
     def test_parse_returns_default_for_empty(self):
         result = parse_step_bytes(b"garbage")
         assert result.name == "未知"
-        assert result.body_count == 1  # At least one implicit body
+        assert len(result.parts) == 0  # No parts when no product found
 
     def test_parse_handles_assembly_with_next_assembly_usage(self):
         """NEXT_ASSEMBLY_USAGE_OCCURRENCE indicates an assembly file."""
