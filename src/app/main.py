@@ -30,6 +30,17 @@ from .models.schemas import (
     SubmitReviewRequest,
 )
 from .repositories.product_graph_repository import ProductGraphRepository
+from .services.process_generation_service import (
+    ProcessGenerationFailedError,
+    ProcessGenerationService,
+    ProductGraphNotFoundError,
+)
+from .services.review_service import (
+    InvalidReviewActionError,
+    ProcessNotFoundError,
+    ReviewRequiredError,
+    ReviewService,
+)
 from .services.step_analysis_service import (
     StepAnalysisService,
     StepFileInvalidError,
@@ -104,34 +115,78 @@ async def get_product_graph(product_graph_id: UUID, db: Session = Depends(get_db
     return _ok(graph_data)
 
 
-# === Process Generation (Epic-2 — not implemented yet) ===
+# === Process Generation (Epic-2) ===
 
 
 @app.post("/api/v1/process/generate")
-async def generate_process(request: GenerateProcessRequest):
+async def generate_process(request: GenerateProcessRequest, db: Session = Depends(get_db)):
     """Generate DraftProcessGraph from ProductGraph. (Contract §5.1)"""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    svc = ProcessGenerationService(db)
+    try:
+        process_id, draft = svc.generate(request.productGraphId)
+        db.commit()
+    except ProductGraphNotFoundError:
+        db.rollback()
+        raise _error("PRODUCT_GRAPH_NOT_FOUND", f"ProductGraph not found: {request.productGraphId}", 404)
+    except ProcessGenerationFailedError as e:
+        db.rollback()
+        raise _error("PROCESS_GENERATION_FAILED", str(e), 500)
+    except Exception:
+        db.rollback()
+        raise _error("INTERNAL_SERVER_ERROR", "Unexpected error", 500)
+
+    return _ok({"processId": str(process_id), "status": draft.status, "steps": [s.model_dump() for s in draft.steps]})
 
 
 @app.get("/api/v1/process/{process_id}")
-async def get_draft_process(process_id: UUID):
+async def get_draft_process(process_id: UUID, db: Session = Depends(get_db)):
     """Get a DraftProcessGraph by ID. (Contract §5.2)"""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    svc = ProcessGenerationService(db)
+    draft = svc.get_draft(process_id)
+    if draft is None:
+        raise _error("PROCESS_NOT_FOUND", f"Process not found: {process_id}", 404)
+
+    return _ok(draft.model_dump())
 
 
-# === Review (Epic-2 — not implemented yet) ===
+# === Review (Epic-2) ===
 
 
 @app.post("/api/v1/process/review")
-async def submit_review(request: SubmitReviewRequest):
+async def submit_review(request: SubmitReviewRequest, db: Session = Depends(get_db)):
     """Submit engineer review decisions. (Contract §6.1)"""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    svc = ReviewService(db)
+    try:
+        approved_id, approved = svc.submit_review(request.processId, request.decisions)
+        db.commit()
+    except ProcessNotFoundError:
+        db.rollback()
+        raise _error("PROCESS_NOT_FOUND", f"Process not found: {request.processId}", 404)
+    except ReviewRequiredError as e:
+        db.rollback()
+        raise _error("REVIEW_REQUIRED", str(e), 422)
+    except InvalidReviewActionError as e:
+        db.rollback()
+        raise _error("INVALID_REVIEW_ACTION", str(e), 422)
+    except Exception:
+        db.rollback()
+        raise _error("INTERNAL_SERVER_ERROR", "Unexpected error", 500)
+
+    return _ok({
+        "approvedProcessId": str(approved_id),
+        "status": "approved",
+    })
 
 
 @app.get("/api/v1/approved-process/{approved_process_id}")
-async def get_approved_process(approved_process_id: UUID):
+async def get_approved_process(approved_process_id: UUID, db: Session = Depends(get_db)):
     """Get an ApprovedProcessGraph by ID. (Contract §6.2)"""
-    raise HTTPException(status_code=501, detail="Not implemented")
+    svc = ReviewService(db)
+    approved = svc.get_approved(approved_process_id)
+    if approved is None:
+        raise _error("APPROVED_PROCESS_NOT_FOUND", f"ApprovedProcess not found: {approved_process_id}", 404)
+
+    return _ok(approved.model_dump())
 
 
 # === Instruction (Epic-3 — not implemented yet) ===
