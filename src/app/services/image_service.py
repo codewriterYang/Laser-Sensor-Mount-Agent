@@ -1,6 +1,6 @@
-"""Image Generation Service — 步骤描述 → 装配示意图 (Doubao Seedream 4.5).
+"""图片生成 Service — 步骤描述 → 装配示意图 (Doubao Seedream 4.5)。
 
-使用 OpenAI-compatible images API (火山引擎)。
+使用 OpenAI-compatible images API（火山引擎）。
 API 不可用时生成 Pillow 占位图。
 """
 
@@ -44,17 +44,17 @@ class ImageService:
     def generate_step_image(self, step_title: str, step_description: str, sequence: int) -> str | None:
         """为一个装配步骤生成示意图。返回文件路径。未配置 API 时跳过。"""
         if not self._client:
-            return None  # Skip in test mode
+            return None  # 测试模式下跳过
 
         IMAGES_DIR.mkdir(parents=True, exist_ok=True)
         image_path = IMAGES_DIR / f"step_{sequence}_{uuid.uuid4().hex[:8]}.png"
 
-        # Try API first
+        # 先尝试 API
         result = self._api_generate(step_title, step_description, sequence, image_path)
         if result:
             return result
 
-        # Fallback to Pillow generated diagram
+        # 回退到 Pillow 生成的示意图
         return self._fallback_diagram(step_title, step_description, sequence, image_path)
 
     def _api_generate(self, title: str, desc: str, seq: int, path: Path) -> str | None:
@@ -70,7 +70,7 @@ class ImageService:
             response = self._client.images.generate(
                 model=config.IMAGE_MODEL,
                 prompt=prompt,
-                size="2048x2048",  # Doubao requires >= 3686400 pixels
+                size="2048x2048",  # Doubao 要求 >= 3686400 像素
                 n=1,
                 response_format="b64_json",
             )
@@ -90,32 +90,33 @@ class ImageService:
         img = Image.new("RGB", (800, 500), "white")
         draw = ImageDraw.Draw(img)
 
-        # Header bar
+        # 标题栏
         draw.rectangle([0, 0, 800, 60], fill="#1a56db")
-        draw.text((20, 18), f"Step {seq}: {title}", fill="white")
+        draw.text((20, 18), f"步骤 {seq}: {title}", fill="white")
 
-        # Assembly diagram area (simple box drawing)
+        # 装配示意图区域（简单框图）
         draw.rectangle([50, 100, 750, 420], outline="#cbd5e1", width=2)
 
-        # Draw simple part representation
-        # Base part
+        # 绘制简单的零件表示
+
+        # 底座零件
         draw.rectangle([150, 320, 650, 380], fill="#93c5fd", outline="#1e40af", width=2)
-        draw.text((340, 340), "Base / 底板", fill="#1e3a5f")
+        draw.text((340, 340), "底座 / Base", fill="#1e3a5f")
 
-        # Middle part
+        # 中间零件
         draw.rectangle([250, 240, 550, 320], fill="#fde68a", outline="#92400e", width=2)
-        draw.text((340, 272), "Part / 零件", fill="#78350f")
+        draw.text((340, 272), "零件 / Part", fill="#78350f")
 
-        # Top part / tool indicator
+        # 顶部零件 / 工具指示
         draw.rectangle([300, 160, 500, 240], fill="#a7f3d0", outline="#065f46", width=2)
-        draw.text((350, 192), "Tool / 工具", fill="#064e3b")
+        draw.text((350, 192), "工具 / Tool", fill="#064e3b")
 
-        # Arrow indicators
+        # 箭头指示
         draw.line([400, 140, 400, 160], fill="#ef4444", width=3)
         draw.line([390, 150, 400, 140], fill="#ef4444", width=3)
         draw.line([410, 150, 400, 140], fill="#ef4444", width=3)
 
-        # Footer
+        # 页脚
         draw.rectangle([0, 440, 800, 500], fill="#f8fafc")
         draw.text((20, 455), desc[:80] + ("..." if len(desc) > 80 else ""), fill="#64748b")
 

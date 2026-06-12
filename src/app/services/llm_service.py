@@ -99,7 +99,7 @@ class LLMService:
             )
             raw = response.choices[0].message.content.strip()
 
-            # Strip markdown code fences if present
+            # 去除可能的 markdown 代码块标记
             if raw.startswith("```"):
                 raw = raw.split("\n", 1)[-1]
                 if raw.endswith("```"):

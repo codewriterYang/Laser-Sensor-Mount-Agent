@@ -87,7 +87,7 @@ class TestEpic2EndToEnd:
         approved = r.json()["data"]
         assert len(approved["steps"]) == 5
         first_step = approved["steps"][0]
-        assert "Modified" in first_step["title"]
+        assert "已修改" in first_step["title"]
 
     def test_review_with_delete(self, client: TestClient):
         """Engineer deletes a step during review."""

@@ -1,4 +1,4 @@
-"""StepFile repository — persistence for step_files table (06_DATABASE.md §4)."""
+"""StepFile 仓库 — step_files 表的持久化层 (06_DATABASE.md §4)。"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from ..models.orm import StepFile
 
 
 class StepFileRepository:
-    """CRUD operations for StepFile entities."""
+    """StepFile 实体的 CRUD 操作。"""
 
     def __init__(self, db: Session):
         self.db = db

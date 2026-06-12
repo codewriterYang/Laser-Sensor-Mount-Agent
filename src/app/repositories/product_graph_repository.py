@@ -1,4 +1,4 @@
-"""ProductGraph repository — persistence for product_graphs table (06_DATABASE.md §5)."""
+"""ProductGraph 仓库 — product_graphs 表的持久化层 (06_DATABASE.md §5)。"""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from ..models.schemas import ProductGraphSchema
 
 
 class ProductGraphRepository:
-    """CRUD operations for ProductGraph entities."""
+    """ProductGraph 实体的 CRUD 操作。"""
 
     def __init__(self, db: Session):
         self.db = db

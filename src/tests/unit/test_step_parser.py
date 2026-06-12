@@ -57,7 +57,7 @@ class TestStepParser:
 
     def test_parse_returns_default_for_empty(self):
         result = parse_step_bytes(b"garbage")
-        assert result.name == "Unknown"
+        assert result.name == "未知"
         assert result.body_count == 1  # At least one implicit body
 
     def test_parse_handles_assembly_with_next_assembly_usage(self):
@@ -85,4 +85,4 @@ END-ISO-10303-21;"""
 
     def test_parse_unknown_returns_default(self):
         result = parse_step_bytes(b"ISO-10303-21;\nDATA;\nENDSEC;\nEND-ISO-10303-21;")
-        assert result.name == "Unknown"
+        assert result.name == "未知"

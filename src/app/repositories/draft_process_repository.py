@@ -1,4 +1,4 @@
-"""DraftProcessGraph repository — 06_DATABASE.md §6."""
+"""DraftProcessGraph 仓库 — 06_DATABASE.md §6。"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from ..models.orm import DraftProcessGraph
 
 
 class DraftProcessRepository:
-    """CRUD for draft_process_graphs table."""
+    """draft_process_graphs 表的 CRUD 操作。"""
 
     def __init__(self, db: Session):
         self.db = db

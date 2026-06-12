@@ -1,4 +1,4 @@
-"""ReviewDecision repository — 06_DATABASE.md §7."""
+"""ReviewDecision 仓库 — 06_DATABASE.md §7。"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from ..models.orm import ReviewDecision
 
 
 class ReviewDecisionRepository:
-    """CRUD for review_decisions table."""
+    """review_decisions 表的 CRUD 操作。"""
 
     def __init__(self, db: Session):
         self.db = db

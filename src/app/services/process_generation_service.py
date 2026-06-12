@@ -1,11 +1,11 @@
-"""Process Generation Service — ProductGraph → DraftProcessGraph (03_ARCHITECTURE.md §1.2).
+"""工艺生成 Service — ProductGraph → DraftProcessGraph (03_ARCHITECTURE.md §1.2)。
 
-Domain Rules (04_DOMAIN_MODEL.md §31):
-  - Parent Before Child
-  - Base First
-  - Fastener Last
-  - Washer Follow Fastener
-  - Sensor After Mount
+领域规则 (04_DOMAIN_MODEL.md §31):
+  - 父件优先于子件
+  - 底座优先
+  - 紧固件靠后
+  - 垫片紧随紧固件
+  - 传感器在支架之后
 """
 
 from __future__ import annotations
@@ -32,13 +32,13 @@ class ProcessGenerationFailedError(Exception):
 
 
 class ProcessGenerationService:
-    """Generate DraftProcessGraph from ProductGraph using rule engine.
+    """使用规则引擎从 ProductGraph 生成 DraftProcessGraph。
 
-    MVP: Applies domain rules to order nodes and generates step descriptions.
-    Future: LLM integration for richer step text.
+    MVP：应用领域规则对节点排序并生成步骤描述。
+    未来：集成 LLM 以生成更丰富的步骤文本。
     """
 
-    # Step ordering priority: lower = earlier in assembly
+    # 步骤排序优先级：值越小，装配越靠前
     NODE_TYPE_PRIORITY = {
         "base": 1,
         "plate": 1,
@@ -59,11 +59,11 @@ class ProcessGenerationService:
         self.llm = LLMService()
 
     def generate(self, product_graph_id: UUID) -> tuple[UUID, DraftProcessGraphSchema]:
-        """Generate a DraftProcessGraph from a ProductGraph.
+        """从 ProductGraph 生成 DraftProcessGraph。
 
-        Returns (process_id, DraftProcessGraphSchema).
+        返回 (process_id, DraftProcessGraphSchema)。
         """
-        # 1. Look up ProductGraph
+        # 1. 查询 ProductGraph
         pg = self.pg_repo.get_by_id(product_graph_id)
         if pg is None:
             raise ProductGraphNotFoundError(product_graph_id)
@@ -73,15 +73,15 @@ class ProcessGenerationService:
         edges = graph_data.get("edges", [])
 
         if not nodes:
-            raise ProcessGenerationFailedError("ProductGraph has no nodes")
+            raise ProcessGenerationFailedError("ProductGraph 没有节点")
 
-        # 2. Apply rule engine to order nodes
+        # 2. 应用规则引擎对节点排序
         ordered_nodes = self._order_by_rules(nodes, edges)
 
-        # 3. Generate step descriptions (LLM if available, template otherwise)
+        # 3. 生成步骤描述（LLM 可用时使用 LLM，否则使用模板）
         steps = self._generate_steps(ordered_nodes, edges)
 
-        # 4. Build DraftProcessGraph — use same UUID for schema and DB
+        # 4. 构建 DraftProcessGraph —— schema 和 DB 使用相同 UUID
         generated_by = f"llm:{self.llm.model_name}" if self.llm.enabled else "rule_engine"
         process_id = uuid.uuid4()
         draft = DraftProcessGraphSchema(
@@ -90,7 +90,7 @@ class ProcessGenerationService:
             steps=steps,
         )
 
-        # 5. Persist with matching ID
+        # 5. 以匹配的 ID 持久化
         dpg = DraftProcessGraph(
             id=str(process_id),
             product_graph_id=str(product_graph_id),
@@ -103,16 +103,16 @@ class ProcessGenerationService:
         return process_id, draft
 
     def _order_by_rules(self, nodes: list[dict], edges: list[dict]) -> list[dict]:
-        """Apply domain assembly rules to order parts.
+        """应用领域装配规则对零件排序。
 
-        Rules (in order):
-          1. Base First — base/plate parts come first
-          2. Parent Before Child — assembly containment order respected
-          3. Sensor After Mount — sensors after brackets/mounts
-          4. Fastener Last — screws/bolts near the end
-          5. Washer Follow Fastener — washers immediately after their fastener
+        规则（按顺序）：
+          1. 底座优先 — 底座/底板类零件最先
+          2. 父件优先于子件 — 遵循装配体包含关系顺序
+          3. 传感器在支架之后 — 传感器在支架/安装座之后
+          4. 紧固件靠后 — 螺丝/螺栓靠近末尾
+          5. 垫片紧随紧固件 — 垫片紧接在对应紧固件之后
         """
-        # Separate assembly and parts
+        # 分离装配体和零件
         assemblies = [n for n in nodes if n["nodeType"] == "assembly"]
         parts = [n for n in nodes if n["nodeType"] == "part"]
 
@@ -121,21 +121,21 @@ class ProcessGenerationService:
             for keyword, pri in self.NODE_TYPE_PRIORITY.items():
                 if keyword in name:
                     return pri
-            return 3  # default middle
+            return 3  # 默认中间优先级
 
-        # Sort parts by priority
+        # 按优先级排序零件
         ordered = sorted(parts, key=_priority)
 
         return ordered
 
     def _generate_steps(self, ordered_nodes: list[dict], edges: list[dict]) -> list[StepSchema]:
-        """Generate assembly steps using LLM for text + rule engine for ordering.
+        """使用 LLM（文本）+ 规则引擎（排序）生成装配步骤。
 
-        Rule engine determines step order (deterministic).
-        LLM generates title, description, and required tools (generative).
-        Falls back to templates when LLM is unavailable.
+        规则引擎决定步骤顺序（确定性）。
+        LLM 生成标题、描述和所需工具（生成式）。
+        LLM 不可用时回退到模板。
         """
-        # Build edge lookup: target → (relation, source_node_id)
+        # 构建边查找表：target → (relation, source_node_id)
         edge_map = {}
         for e in edges:
             relation = e["relation"]
@@ -146,11 +146,11 @@ class ProcessGenerationService:
 
         steps = []
         for seq, node in enumerate(ordered_nodes, 1):
-            name = node.get("name", "Unknown Part")
+            name = node.get("name", "未知零件")
             material = node.get("metadata", {}).get("material", "")
             node_id = node["nodeId"]
 
-            # Determine relation and target
+            # 确定关系和目标
             relation = "contains"
             target_name = ""
             if node_id in edge_map:
@@ -164,7 +164,7 @@ class ProcessGenerationService:
                 target_name=target_name,
                 sequence=seq,
             )
-            # Set required parts based on graph data
+            # 根据图数据设置所需零件
             if target_name:
                 step.requiredParts = [name, target_name]
             else:
@@ -175,7 +175,7 @@ class ProcessGenerationService:
         return steps
 
     def get_draft(self, process_id: UUID) -> DraftProcessGraphSchema | None:
-        """Retrieve a DraftProcessGraph by ID."""
+        """根据 ID 获取 DraftProcessGraph。"""
         dpg = self.draft_repo.get_by_id(process_id)
         if dpg is None:
             return None

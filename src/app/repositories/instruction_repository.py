@@ -1,4 +1,4 @@
-"""AssemblyInstruction repository — 06_DATABASE.md §9."""
+"""AssemblyInstruction 仓库 — 06_DATABASE.md §9。"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from ..models.orm import AssemblyInstruction
 
 
 class InstructionRepository:
-    """CRUD for assembly_instructions table."""
+    """assembly_instructions 表的 CRUD 操作。"""
 
     def __init__(self, db: Session):
         self.db = db

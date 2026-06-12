@@ -1,4 +1,4 @@
-"""Pydantic schemas matching 05_CONTRACT.md."""
+"""Pydantic schema 定义，对应 05_CONTRACT.md 规范。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 
-# --- Standard Response Wrappers ---
+# --- 标准响应包装器 ---
 
 class StandardResponse(BaseModel):
     success: bool
@@ -23,7 +23,7 @@ class ErrorResponse(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 
-# --- STEP Analysis ---
+# --- STEP 分析 ---
 
 class AnalyzeStepRequest(BaseModel):
     fileName: str
@@ -84,7 +84,7 @@ class GenerateProcessData(BaseModel):
     steps: list[StepSchema] = Field(default_factory=list)
 
 
-# --- Review ---
+# --- 审核 ---
 
 class ReviewDecisionSchema(BaseModel):
     stepId: UUID
@@ -111,7 +111,7 @@ class ApprovedProcessGraphSchema(BaseModel):
     steps: list[StepSchema] = Field(default_factory=list)
 
 
-# --- Instruction ---
+# --- 指导书 ---
 
 class RenderInstructionRequest(BaseModel):
     approvedProcessId: UUID
@@ -133,7 +133,7 @@ class AssemblyInstructionSchema(BaseModel):
     sections: list[SectionSchema] = Field(default_factory=list)
 
 
-# --- PDF Export ---
+# --- PDF 导出 ---
 
 class ExportPdfRequest(BaseModel):
     instructionId: UUID

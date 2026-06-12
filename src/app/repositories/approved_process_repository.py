@@ -1,4 +1,4 @@
-"""ApprovedProcessGraph repository — 06_DATABASE.md §8."""
+"""ApprovedProcessGraph 仓库 — 06_DATABASE.md §8。"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from ..models.orm import ApprovedProcessGraph
 
 
 class ApprovedProcessRepository:
-    """CRUD for approved_process_graphs table."""
+    """approved_process_graphs 表的 CRUD 操作。"""
 
     def __init__(self, db: Session):
         self.db = db

@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models matching 06_DATABASE.md."""
+"""SQLAlchemy ORM 模型，对应 06_DATABASE.md 规范。"""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ class ProductGraph(Base):
 
     id = Column(String(36), primary_key=True, default=_uuid)
     step_file_id = Column(String(36), ForeignKey("step_files.id"), nullable=False)
-    graph_json = Column(Text, nullable=False)  # JSON-encoded ProductGraph
+    graph_json = Column(Text, nullable=False)  # JSON 编码的 ProductGraph
     status = Column(String(20), nullable=False, default="draft")  # draft|generated|approved
     created_at = Column(DateTime, nullable=False, default=_utcnow)
     updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
@@ -49,7 +49,7 @@ class DraftProcessGraph(Base):
 
     id = Column(String(36), primary_key=True, default=_uuid)
     product_graph_id = Column(String(36), ForeignKey("product_graphs.id"), nullable=False)
-    graph_json = Column(Text, nullable=False)  # JSON-encoded DraftProcessGraph
+    graph_json = Column(Text, nullable=False)  # JSON 编码的 DraftProcessGraph
     status = Column(String(20), nullable=False, default="draft")  # draft|reviewing|approved|rejected
     generated_by = Column(String(50), nullable=False, default="system")
     created_at = Column(DateTime, nullable=False, default=_utcnow)

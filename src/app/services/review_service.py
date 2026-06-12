@@ -1,4 +1,4 @@
-"""Review Service — DraftProcessGraph → ApprovedProcessGraph (03_ARCHITECTURE.md §1.2)."""
+"""审核 Service — DraftProcessGraph → ApprovedProcessGraph (03_ARCHITECTURE.md §1.2)。"""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ VALID_ACTIONS = {"accept", "modify", "delete", "insert"}
 
 
 class ReviewService:
-    """Process engineer review decisions → ApprovedProcessGraph."""
+    """工艺工程师审核决策 → ApprovedProcessGraph。"""
 
     def __init__(self, db: Session):
         self.db = db
@@ -49,11 +49,11 @@ class ReviewService:
     def submit_review(
         self, process_id: UUID, decisions: list[ReviewDecisionSchema], reviewer: str = "Engineer"
     ) -> tuple[UUID, ApprovedProcessGraphSchema]:
-        """Submit review decisions and generate an ApprovedProcessGraph.
+        """提交审核决策并生成 ApprovedProcessGraph。
 
-        Returns (approved_process_id, ApprovedProcessGraphSchema).
+        返回 (approved_process_id, ApprovedProcessGraphSchema)。
         """
-        # 1. Look up DraftProcessGraph
+        # 1. 查询 DraftProcessGraph
         dpg = self.draft_repo.get_by_id(process_id)
         if dpg is None:
             raise ProcessNotFoundError(process_id)
@@ -61,18 +61,18 @@ class ReviewService:
         draft_data = json.loads(dpg.graph_json)
         draft = DraftProcessGraphSchema(**draft_data)
 
-        # 2. Validate decisions
+        # 2. 校验决策
         if not decisions:
-            raise ReviewRequiredError("At least one review decision is required")
+            raise ReviewRequiredError("至少需要一个审核决策")
 
         for d in decisions:
             if d.action not in VALID_ACTIONS:
-                raise InvalidReviewActionError(f"Invalid action: {d.action}")
+                raise InvalidReviewActionError(f"无效操作: {d.action}")
 
-        # 3. Apply decisions to steps
+        # 3. 应用决策到步骤列表
         updated_steps = self._apply_decisions(draft.steps, decisions)
 
-        # 4. Persist review decisions
+        # 4. 持久化审核决策
         for d in decisions:
             rd = ReviewDecision(
                 process_id=str(process_id),
@@ -83,10 +83,10 @@ class ReviewService:
             )
             self.review_repo.save(rd)
 
-        # 5. Update DraftProcessGraph status
+        # 5. 更新 DraftProcessGraph 状态
         self.draft_repo.update_graph_json(process_id, draft.model_dump_json(), "approved")
 
-        # 6. Create ApprovedProcessGraph — use same UUID for schema and DB
+        # 6. 创建 ApprovedProcessGraph —— schema 和 DB 使用相同 UUID
         approved_id = uuid.uuid4()
         now = datetime.now(timezone.utc)
         approved = ApprovedProcessGraphSchema(
@@ -110,7 +110,7 @@ class ReviewService:
     def _apply_decisions(
         self, steps: list[StepSchema], decisions: list[ReviewDecisionSchema]
     ) -> list[StepSchema]:
-        """Apply review decisions to the step list."""
+        """将审核决策应用到步骤列表。"""
         step_map = {str(s.stepId): s for s in steps}
         result = []
 
@@ -122,13 +122,13 @@ class ReviewService:
                     result.append(step_map[sid])
 
             elif d.action == "delete":
-                # Skip this step (don't add to result)
+                # 跳过此步骤（不加入结果列表）
                 pass
 
             elif d.action == "modify":
                 if sid in step_map:
                     modified = step_map[sid].model_copy(deep=True)
-                    modified.title = f"{modified.title} (Modified)"
+                    modified.title = f"{modified.title} (已修改)"
                     modified.description = d.reason or modified.description
                     result.append(modified)
 
@@ -136,21 +136,21 @@ class ReviewService:
                 new_step = StepSchema(
                     stepId=uuid.uuid4(),
                     sequence=len(result) + 1,
-                    title=f"Added Step",
-                    description=d.reason or "Engineer-inserted step",
+                    title=f"新增步骤",
+                    description=d.reason or "工程师插入的步骤",
                     requiredParts=[],
                     requiredTools=[],
                 )
                 result.append(new_step)
 
-        # Re-sequence
+        # 重新编号
         for i, s in enumerate(result, 1):
             s.sequence = i
 
         return result
 
     def get_approved(self, approved_process_id: UUID) -> ApprovedProcessGraphSchema | None:
-        """Retrieve an ApprovedProcessGraph by ID."""
+        """根据 ID 获取 ApprovedProcessGraph。"""
         apg = self.approved_repo.get_by_id(approved_process_id)
         if apg is None:
             return None

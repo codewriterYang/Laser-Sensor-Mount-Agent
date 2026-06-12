@@ -99,7 +99,7 @@ class TestReviewService:
         _, approved = self.svc.submit_review(UUID(self.dpg_id), decisions)
         assert len(approved.steps) == 1
         step = approved.steps[0]
-        assert "Modified" in step.title
+        assert "已修改" in step.title
         assert "torque wrench" in step.description.lower()
 
     def test_insert_adds_new_step(self):
@@ -109,7 +109,7 @@ class TestReviewService:
         ]
         _, approved = self.svc.submit_review(UUID(self.dpg_id), decisions)
         assert len(approved.steps) == 2
-        assert approved.steps[1].title == "Added Step"
+        assert approved.steps[1].title == "新增步骤"
 
     def test_review_records_approved_by(self):
         decisions = [

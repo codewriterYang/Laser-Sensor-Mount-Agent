@@ -1,4 +1,4 @@
-"""Instruction Service — ApprovedProcessGraph → AssemblyInstruction → PDF (03_ARCHITECTURE.md §1.2)."""
+"""指导书 Service — ApprovedProcessGraph → AssemblyInstruction → PDF (03_ARCHITECTURE.md §1.2)。"""
 
 from __future__ import annotations
 
@@ -40,11 +40,11 @@ class PDFExportFailedError(Exception):
 
 EXPORTS_DIR = Path("exports")
 
-# CJK font paths to try (in order of preference)
+# CJK 字体路径，按优先级尝试
 _CJK_FONT_PATHS = [
-    "C:/Windows/Fonts/msyh.ttc",       # Microsoft YaHei (Windows Chinese)
-    "C:/Windows/Fonts/simhei.ttf",     # SimHei (Windows)
-    "C:/Windows/Fonts/simsun.ttc",     # SimSun (Windows)
+    "C:/Windows/Fonts/simhei.ttf",     # 黑体 (Windows TTF，优先避免 TTC 子集化问题)
+    "C:/Windows/Fonts/msyh.ttc",       # 微软雅黑 (Windows)
+    "C:/Windows/Fonts/simsun.ttc",     # 宋体 (Windows)
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux
     "/System/Library/Fonts/PingFang.ttc",  # macOS
 ]
@@ -53,7 +53,7 @@ _cjk_font_path: str | None = None
 
 
 def _get_cjk_font_path() -> str | None:
-    """Find an available CJK TrueType font on the system."""
+    """在系统中查找可用的 CJK TrueType 字体。"""
     global _cjk_font_path
     if _cjk_font_path is not None:
         return _cjk_font_path if _cjk_font_path else None
@@ -66,7 +66,7 @@ def _get_cjk_font_path() -> str | None:
 
 
 def _make_pdf() -> FPDF:
-    """Create an FPDF instance with CJK font support if available."""
+    """创建 FPDF 实例，如果可用则添加 CJK 字体支持。"""
     pdf = FPDF()
     cjk_path = _get_cjk_font_path()
     if cjk_path:
@@ -76,7 +76,7 @@ def _make_pdf() -> FPDF:
 
 
 class InstructionService:
-    """Render AssemblyInstruction from ApprovedProcessGraph and export PDF."""
+    """从 ApprovedProcessGraph 渲染 AssemblyInstruction 并导出 PDF。"""
 
     def __init__(self, db: Session):
         self.db = db
@@ -85,9 +85,9 @@ class InstructionService:
         self.image_service = ImageService()
 
     def render(self, approved_process_id: UUID) -> tuple[UUID, AssemblyInstructionSchema]:
-        """Render an AssemblyInstruction from an ApprovedProcessGraph.
+        """从 ApprovedProcessGraph 渲染 AssemblyInstruction。
 
-        Returns (instruction_id, AssemblyInstructionSchema).
+        返回 (instruction_id, AssemblyInstructionSchema)。
         """
         apg = self.approved_repo.get_by_id(approved_process_id)
         if apg is None:
@@ -96,13 +96,13 @@ class InstructionService:
         data = json.loads(apg.graph_json)
         approved = ApprovedProcessGraphSchema(**data)
 
-        # Generate images for each step (non-blocking — continues on failure)
+        # 为每个步骤生成图片（非阻塞 — 失败时继续）
         step_dicts = [s.model_dump() for s in approved.steps]
         image_paths = {}
         if self.image_service.enabled:
             image_paths = self.image_service.generate_all_step_images(step_dicts)
 
-        # Build sections with image paths
+        # 构建包含图片路径的章节
         sections = self._build_sections(approved, image_paths)
 
         instruction_id = uuid.uuid4()
@@ -160,7 +160,7 @@ class InstructionService:
         return sections
 
     def get_instruction(self, instruction_id: UUID) -> AssemblyInstructionSchema | None:
-        """Retrieve an AssemblyInstruction by ID."""
+        """根据 ID 获取 AssemblyInstruction。"""
         ai = self.instruction_repo.get_by_id(instruction_id)
         if ai is None:
             return None
@@ -168,7 +168,7 @@ class InstructionService:
         return AssemblyInstructionSchema(**data)
 
     def export_pdf(self, instruction_id: UUID) -> str:
-        """Export an AssemblyInstruction as PDF with embedded images. Returns the file path."""
+        """将 AssemblyInstruction 导出为含图片的 PDF。返回文件路径。"""
         ai = self.instruction_repo.get_by_id(instruction_id)
         if ai is None:
             raise InstructionNotFoundError(instruction_id)
@@ -185,7 +185,7 @@ class InstructionService:
             font_name = "CJK" if has_cjk else "Helvetica"
             pdf.set_auto_page_break(auto=True, margin=15)
 
-            # Title page
+            # 封面页
             pdf.add_page()
             pdf.set_font(font_name, "B", 16)
             pdf.cell(0, 10, "装配指导书", new_x="LMARGIN", new_y="NEXT", align="C")
@@ -204,20 +204,20 @@ class InstructionService:
                 elif section.sectionType == "step":
                     pdf.set_font(font_name, "B", 11)
                     lines = section.content.split("\n")
-                    pdf.cell(0, 7, lines[0], new_x="LMARGIN", new_y="NEXT")  # Step title
+                    pdf.cell(0, 7, lines[0], new_x="LMARGIN", new_y="NEXT")  # 步骤标题
                     pdf.set_font(font_name, "", 10)
                     for line in lines[1:]:
                         if line.strip():
                             pdf.cell(0, 6, f"  {line.strip()}", new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(2)
 
-                    # Embed step image if available
+                    # 嵌入步骤图片（如果可用）
                     if section.imagePath and Path(section.imagePath).exists():
                         try:
                             pdf.image(section.imagePath, x=20, w=170)
                             pdf.ln(4)
                         except Exception:
-                            pass  # Skip image if it can't be embedded
+                            pass  # 无法嵌入图片时跳过
                     pdf.ln(4)
                 elif section.sectionType == "safety":
                     pdf.set_font(font_name, "B", 10)
@@ -235,4 +235,4 @@ class InstructionService:
 
             return str(pdf_path)
         except Exception as e:
-            raise PDFExportFailedError(f"PDF export failed: {e}")
+            raise PDFExportFailedError(f"PDF 导出失败: {e}")

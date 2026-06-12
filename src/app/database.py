@@ -1,4 +1,4 @@
-"""Database engine and session factory."""
+"""数据库引擎与会话工厂。"""
 
 from __future__ import annotations
 
@@ -16,12 +16,12 @@ SessionLocal = sessionmaker(bind=engine)
 
 
 def create_tables() -> None:
-    """Create all tables if they don't exist (MVP — no Alembic migration yet)."""
+    """创建所有表（如果尚不存在）—— MVP 阶段，暂未使用 Alembic 迁移。"""
     Base.metadata.create_all(bind=engine)
 
 
 def get_db() -> Session:
-    """Yields a database session (FastAPI dependency)."""
+    """生成数据库会话（FastAPI 依赖注入）。"""
     db = SessionLocal()
     try:
         yield db
