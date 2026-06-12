@@ -14,6 +14,7 @@ from ..models.schemas import EdgeSchema, NodeSchema, ProductGraphSchema
 from ..repositories.product_graph_repository import ProductGraphRepository
 from ..repositories.step_file_repository import StepFileRepository
 from .step_parser import ParsedProduct, parse_step_bytes
+from ..logger import logger
 
 
 class StepFileNotFoundError(Exception):
@@ -133,9 +134,11 @@ class StepAnalysisService:
             StepParseFailedError：解析过程失败。
         """
         file_name = file.filename or "unnamed"
+        logger.info(f"开始解析 STEP 文件：{file_name}")
 
         # 验证文件扩展名
         if not file_name.lower().endswith(self.VALID_EXTENSION):
+            logger.warning(f"文件格式无效：{file_name}")
             raise StepFileInvalidError(file_name)
 
         # 读取文件内容并持久化到磁盘
@@ -165,9 +168,12 @@ class StepAnalysisService:
             # 判断是否解析出了有效数据：有产品名 且 不是测试桩文件
             if parsed.name and parsed.name != "未知" and file_size > 100:
                 pg = _build_product_graph(parsed)
+                logger.info(f"STEP 解析成功：{parsed.name}，{len(parsed.parts)} 个零件，"
+                           f"尺寸 {parsed.length}×{parsed.width}×{parsed.height}mm")
             else:
                 pg = DEMO_PRODUCT_GRAPH.model_copy(deep=True)
                 pg.graphId = uuid.uuid4()
+                logger.info(f"使用演示 ProductGraph（测试文件）")
 
             pg_orm = ProductGraph(
                 step_file_id=str(step_file_id),

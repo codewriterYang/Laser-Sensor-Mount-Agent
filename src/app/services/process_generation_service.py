@@ -21,6 +21,7 @@ from ..models.schemas import DraftProcessGraphSchema, StepSchema
 from ..repositories.draft_process_repository import DraftProcessRepository
 from ..repositories.product_graph_repository import ProductGraphRepository
 from .llm_service import LLMService
+from ..logger import logger
 
 
 class ProductGraphNotFoundError(Exception):
@@ -63,9 +64,12 @@ class ProcessGenerationService:
 
         返回 (process_id, DraftProcessGraphSchema)。
         """
+        logger.info(f"开始生成工艺流程，ProductGraph ID: {product_graph_id}")
+
         # 1. 查询 ProductGraph
         pg = self.pg_repo.get_by_id(product_graph_id)
         if pg is None:
+            logger.error(f"ProductGraph 未找到：{product_graph_id}")
             raise ProductGraphNotFoundError(product_graph_id)
 
         graph_data = json.loads(pg.graph_json)

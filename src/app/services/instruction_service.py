@@ -18,8 +18,11 @@ from ..models.schemas import (
     SectionSchema,
 )
 from ..repositories.approved_process_repository import ApprovedProcessRepository
+from ..repositories.draft_process_repository import DraftProcessRepository
 from ..repositories.instruction_repository import InstructionRepository
+from ..repositories.product_graph_repository import ProductGraphRepository
 from .image_service import ImageService
+from ..logger import logger
 
 
 class ApprovedProcessNotFoundError(Exception):
@@ -81,6 +84,8 @@ class InstructionService:
     def __init__(self, db: Session):
         self.db = db
         self.approved_repo = ApprovedProcessRepository(db)
+        self.draft_repo = DraftProcessRepository(db)
+        self.pg_repo = ProductGraphRepository(db)
         self.instruction_repo = InstructionRepository(db)
         self.image_service = ImageService()
 
@@ -96,11 +101,12 @@ class InstructionService:
         data = json.loads(apg.graph_json)
         approved = ApprovedProcessGraphSchema(**data)
 
-        # 为每个步骤生成图片（非阻塞 — 失败时继续）
+        # 通过链路追溯获取真实零件尺寸：ApprovedProcess → DraftProcess → ProductGraph
+        part_dims = self._get_part_dimensions(apg.draft_process_id)
+
+        # 为每个步骤生成图片（基于真实 STEP 尺寸数据，非 AI 虚构）
         step_dicts = [s.model_dump() for s in approved.steps]
-        image_paths = {}
-        if self.image_service.enabled:
-            image_paths = self.image_service.generate_all_step_images(step_dicts)
+        image_paths = self.image_service.generate_all_step_images(step_dicts, part_dims)
 
         # 构建包含图片路径的章节
         sections = self._build_sections(approved, image_paths)
@@ -120,6 +126,41 @@ class InstructionService:
         self.instruction_repo.save(ai)
 
         return instruction_id, instruction
+
+    def _get_part_dimensions(self, draft_process_id: str | None) -> dict | None:
+        """通过链路追溯获取零件真实尺寸。
+
+        ApprovedProcess → DraftProcess → ProductGraph → 从节点 metadata 中提取尺寸。
+        """
+        if not draft_process_id:
+            return None
+        try:
+            from uuid import UUID
+            draft = self.draft_repo.get_by_id(UUID(draft_process_id))
+            if not draft:
+                return None
+            import json
+            draft_data = json.loads(draft.graph_json)
+            pg_id = draft_data.get("productGraphId") or draft.product_graph_id
+            if not pg_id:
+                return None
+            pg = self.pg_repo.get_by_id(UUID(pg_id))
+            if not pg:
+                return None
+            pg_data = json.loads(pg.graph_json)
+            # 找第一个有尺寸数据的节点
+            for node in pg_data.get("nodes", []):
+                meta = node.get("metadata", {})
+                if meta.get("length") and meta.get("width") and meta.get("height"):
+                    return {
+                        "length": meta["length"],
+                        "width": meta["width"],
+                        "height": meta["height"],
+                    }
+            return None
+        except Exception as e:
+            logger.warning(f"获取零件尺寸失败：{e}")
+            return None
 
     def _build_sections(
         self, approved: ApprovedProcessGraphSchema, image_paths: dict[int, str] | None = None

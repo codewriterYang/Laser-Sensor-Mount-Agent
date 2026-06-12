@@ -20,6 +20,7 @@ from ..models.schemas import (
 from ..repositories.approved_process_repository import ApprovedProcessRepository
 from ..repositories.draft_process_repository import DraftProcessRepository
 from ..repositories.review_decision_repository import ReviewDecisionRepository
+from ..logger import logger
 
 
 class ProcessNotFoundError(Exception):
@@ -53,9 +54,12 @@ class ReviewService:
 
         返回 (approved_process_id, ApprovedProcessGraphSchema)。
         """
+        logger.info(f"开始处理审核，工艺 ID: {process_id}，决策数: {len(decisions)}")
+
         # 1. 查询 DraftProcessGraph
         dpg = self.draft_repo.get_by_id(process_id)
         if dpg is None:
+            logger.error(f"工艺流程未找到：{process_id}")
             raise ProcessNotFoundError(process_id)
 
         draft_data = json.loads(dpg.graph_json)

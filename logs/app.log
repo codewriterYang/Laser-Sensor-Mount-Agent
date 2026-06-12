@@ -1,0 +1,182 @@
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：invalid.txt
+2026-06-12 17:25:01 | WARNING | step_analysis_service:141 | 文件格式无效：invalid.txt
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：no_extension
+2026-06-12 17:25:01 | WARNING | step_analysis_service:141 | 文件格式无效：no_extension
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: dcb34e39-b7ac-4fee-bae5-937caf75afdc
+2026-06-12 17:25:01 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 00000000-0000-0000-0000-00000000dead
+2026-06-12 17:25:01 | ERROR   | process_generation_service:72 | ProductGraph 未找到：00000000-0000-0000-0000-00000000dead
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 99e22eeb-3a77-4283-a2d1-8c5f4f9c2f70
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 0a55a4ec-a6fb-40e1-b80a-00f9880011c4
+2026-06-12 17:25:01 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 1b96749c-20d6-4289-b240-9c706b856753，决策数: 5
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 81fdb57b-d3fc-45f5-bc8e-4740ea3e6604
+2026-06-12 17:25:01 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 9aa4856b-5fcd-4ed6-ba1a-47eab09d990a，决策数: 1
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 614ac499-bc36-46b2-b627-dc4b5c5ef5e6
+2026-06-12 17:25:01 | INFO    | review_service:57 | 开始处理审核，工艺 ID: e6636d07-d5f4-4c53-8e56-505bca5f863b，决策数: 0
+2026-06-12 17:25:01 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 00000000-0000-0000-0000-00000000dead，决策数: 1
+2026-06-12 17:25:01 | ERROR   | review_service:62 | 工艺流程未找到：00000000-0000-0000-0000-00000000dead
+2026-06-12 17:25:01 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:01 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:01 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: e61c305d-0219-457e-83de-d3ad5001dfd5
+2026-06-12 17:25:01 | INFO    | review_service:57 | 开始处理审核，工艺 ID: d0b31ae0-8c8c-4bc0-b1d8-28744950de6c，决策数: 5
+2026-06-12 17:25:02 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:02 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:02 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 1cdaec65-75f8-4bd1-b06c-491782104279
+2026-06-12 17:25:02 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 967dc562-face-4369-a2a1-4f8989263cbb，决策数: 5
+2026-06-12 17:25:02 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_2f4a39d3.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_015b0a71.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_b8363b33.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 4 示意图已生成：step_4_fa2d9396.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 5 示意图已生成：step_5_a36473dd.png
+2026-06-12 17:25:02 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:02 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:02 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:02 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 6c8072e5-5ea5-4d29-8c87-d1bffa5244ef
+2026-06-12 17:25:02 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 164c56f7-70ef-4c49-8de8-21290729cfa9，决策数: 5
+2026-06-12 17:25:02 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_7571b1d6.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_1817adeb.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_197f6e30.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 4 示意图已生成：step_4_d5865fe8.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 5 示意图已生成：step_5_4c566203.png
+2026-06-12 17:25:02 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:02 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:02 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:02 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:02 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: cf44bc61-325c-4736-ba0b-ce839b9efc2a
+2026-06-12 17:25:02 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 6d7077d4-dc4a-4dbd-904f-0a3071584e65，决策数: 5
+2026-06-12 17:25:02 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_4b58b9d1.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_c07a4a51.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_5524cc7e.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 4 示意图已生成：step_4_77300ad4.png
+2026-06-12 17:25:02 | INFO    | image_service:155 | 步骤 5 示意图已生成：step_5_1df90bfc.png
+2026-06-12 17:25:02 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:03 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:03 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:03 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:03 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：document.pdf
+2026-06-12 17:25:03 | WARNING | step_analysis_service:141 | 文件格式无效：document.pdf
+2026-06-12 17:25:03 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：noext
+2026-06-12 17:25:03 | WARNING | step_analysis_service:141 | 文件格式无效：noext
+2026-06-12 17:25:03 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:03 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:03 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 8c883b81-8354-4f9c-b217-ac3ba5c45f56
+2026-06-12 17:25:03 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 080b46cf-a056-4013-884d-94b52ee0075a，决策数: 5
+2026-06-12 17:25:03 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:03 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:03 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: a96b8f8f-a120-4695-9aa6-7c270bf955f5
+2026-06-12 17:25:03 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 4915dc05-fdf6-404c-a18d-a36cb11f80d7，决策数: 5
+2026-06-12 17:25:03 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:03 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:03 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 63df8340-1c7c-4454-b4ff-8a2c479a6bb5
+2026-06-12 17:25:03 | INFO    | review_service:57 | 开始处理审核，工艺 ID: d266d28f-7859-49c8-9c68-33dbf819427e，决策数: 5
+2026-06-12 17:25:03 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:03 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:03 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 944d98b9-a636-4459-9087-5871ff8180c8
+2026-06-12 17:25:03 | INFO    | review_service:57 | 开始处理审核，工艺 ID: cbddc7f3-0138-4218-a074-6eb97645f740，决策数: 0
+2026-06-12 17:25:04 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 00000000-0000-0000-0000-00000000dead
+2026-06-12 17:25:04 | ERROR   | process_generation_service:72 | ProductGraph 未找到：00000000-0000-0000-0000-00000000dead
+2026-06-12 17:25:04 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:04 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:04 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 9580d2e1-44c2-4cf4-8d32-ce777b4dcf70
+2026-06-12 17:25:04 | INFO    | review_service:57 | 开始处理审核，工艺 ID: bc4ec726-25dd-4504-8dec-4128d4b252be，决策数: 5
+2026-06-12 17:25:04 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:04 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_1ab7e7a8.png
+2026-06-12 17:25:04 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_c052a77e.png
+2026-06-12 17:25:04 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_c0300ed2.png
+2026-06-12 17:25:04 | INFO    | image_service:155 | 步骤 4 示意图已生成：step_4_1509553b.png
+2026-06-12 17:25:04 | INFO    | image_service:155 | 步骤 5 示意图已生成：step_5_68dc995a.png
+2026-06-12 17:25:04 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:04 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:05 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:05 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:05 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:05 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:05 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: fd9f5dce-2528-47eb-b98e-2598e3702c13
+2026-06-12 17:25:05 | INFO    | review_service:57 | 开始处理审核，工艺 ID: e69a429c-6771-4883-9833-eda6487171e6，决策数: 5
+2026-06-12 17:25:05 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:05 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_7b41cfb8.png
+2026-06-12 17:25:05 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_718ca525.png
+2026-06-12 17:25:05 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_1f7cd2d6.png
+2026-06-12 17:25:05 | INFO    | image_service:155 | 步骤 4 示意图已生成：step_4_b677109c.png
+2026-06-12 17:25:05 | INFO    | image_service:155 | 步骤 5 示意图已生成：step_5_846355f9.png
+2026-06-12 17:25:05 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:05 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:08 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_1eee4b48.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_20f477b1.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_1dea769a.png
+2026-06-12 17:25:08 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_1a0491ac.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_5babae3b.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_50c18472.png
+2026-06-12 17:25:08 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_7fa253b4.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_4213f0d7.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_0970823e.png
+2026-06-12 17:25:08 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:08 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_6dbd0d25.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_59ee7277.png
+2026-06-12 17:25:08 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_378f1a66.png
+2026-06-12 17:25:09 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:09 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:09 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_d3fbdd95.png
+2026-06-12 17:25:09 | INFO    | image_service:155 | 步骤 2 示意图已生成：step_2_f13aaf52.png
+2026-06-12 17:25:09 | INFO    | image_service:155 | 步骤 3 示意图已生成：step_3_bf559980.png
+2026-06-12 17:25:09 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:09 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: de2dbd22-2557-499c-8a61-e33e510a9416
+2026-06-12 17:25:09 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 4ea41e3a-34ff-459a-abb3-f58a3ca9a40f
+2026-06-12 17:25:09 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 85d89fa8-51a8-46d3-9ec0-a6c1f4b800fe
+2026-06-12 17:25:09 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 928810af-cce9-4e06-b34a-fc4ee53a3a02
+2026-06-12 17:25:09 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 9456868d-a4c2-4f65-ae77-fd053f218884
+2026-06-12 17:25:10 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 63a4aaed-dae3-423c-aefa-2cfc7a5ce7de
+2026-06-12 17:25:10 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 594831ab-2ee7-414c-8ef2-82e10e87d8ed
+2026-06-12 17:25:10 | INFO    | process_generation_service:67 | 开始生成工艺流程，ProductGraph ID: 4e1cdd9f-7170-4519-a05c-e6cbf6012022
+2026-06-12 17:25:10 | ERROR   | process_generation_service:72 | ProductGraph 未找到：4e1cdd9f-7170-4519-a05c-e6cbf6012022
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 9ff21fb4-d490-4d97-acd1-584ae1e9c60d，决策数: 2
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: b759e43a-52ba-4ebf-8d0e-174708e41a89，决策数: 5
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 31b53ca0-f018-492c-9b14-7d7c586fed63，决策数: 2
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 8406e878-c266-464e-ac8c-4f6ea5ae9024，决策数: 1
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 9d65b8e3-1d26-4bf1-91e7-f92cc8ca3ed5，决策数: 2
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: acee6951-a630-4f0f-863b-a4898130d9f7，决策数: 1
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 910338ec-4e60-489c-8ebc-d30ac6709c63，决策数: 1
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 3645b395-1fb0-4300-aa95-e224a077309d，决策数: 3
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 598189bc-fc30-4eb0-b193-9b33d84b502e，决策数: 1
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 6880feaa-352f-4d59-a3bd-14fca645095a，决策数: 1
+2026-06-12 17:25:10 | ERROR   | review_service:62 | 工艺流程未找到：6880feaa-352f-4d59-a3bd-14fca645095a
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: bef4c78b-3052-4310-a9f4-2e76502966d4，决策数: 0
+2026-06-12 17:25:10 | INFO    | review_service:57 | 开始处理审核，工艺 ID: 0390e1e1-1ffd-49e7-b0c7-ef4884896620，决策数: 1
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:11 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:11 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：demo_laser_mount.step
+2026-06-12 17:25:11 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：invalid.txt
+2026-06-12 17:25:11 | WARNING | step_analysis_service:141 | 文件格式无效：invalid.txt
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：no_extension
+2026-06-12 17:25:11 | WARNING | step_analysis_service:141 | 文件格式无效：no_extension
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:11 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:11 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:11 | INFO    | step_analysis_service:137 | 开始解析 STEP 文件：laser_sensor_mount.step
+2026-06-12 17:25:11 | INFO    | step_analysis_service:176 | 使用演示 ProductGraph（测试文件）
+2026-06-12 17:25:23 | INFO    | image_service:108 | 图片服务已初始化（基于真实几何数据生成）
+2026-06-12 17:25:23 | INFO    | image_service:155 | 步骤 1 示意图已生成：step_1_511fcbbe.png
