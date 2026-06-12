@@ -41,6 +41,7 @@ class NodeSchema(BaseModel):
     nodeId: UUID = Field(default_factory=uuid4)
     nodeType: str  # "assembly" | "part"
     name: str
+    quantity: int = 1
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

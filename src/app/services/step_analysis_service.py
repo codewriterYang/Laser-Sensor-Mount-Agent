@@ -36,12 +36,12 @@ class StepParseFailedError(Exception):
 DEMO_PRODUCT_GRAPH = ProductGraphSchema(
     graphId=UUID("11111111-1111-1111-1111-111111111111"),
     nodes=[
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000001"), nodeType="assembly", name="激光传感器安装组件"),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000002"), nodeType="part", name="底板", metadata={"material": "铝合金 6061", "partNumber": "LSM-BASE-001"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000003"), nodeType="part", name="支架", metadata={"material": "钢", "partNumber": "LSM-BRK-001"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000004"), nodeType="part", name="激光传感器", metadata={"partNumber": "LS-2000"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000005"), nodeType="part", name="M4x12 螺丝", metadata={"material": "不锈钢"}),
-        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000006"), nodeType="part", name="M4 垫片", metadata={"material": "不锈钢"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000001"), nodeType="assembly", name="激光传感器安装组件", quantity=1),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000002"), nodeType="part", name="底板", quantity=1, metadata={"material": "铝合金 6061", "partNumber": "LSM-BASE-001"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000003"), nodeType="part", name="支架", quantity=1, metadata={"material": "钢", "partNumber": "LSM-BRK-001"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000004"), nodeType="part", name="激光传感器", quantity=1, metadata={"partNumber": "LS-2000"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000005"), nodeType="part", name="M4x12 螺丝", quantity=2, metadata={"material": "不锈钢"}),
+        NodeSchema(nodeId=UUID("a1000000-0000-0000-0000-000000000006"), nodeType="part", name="M4 垫片", quantity=2, metadata={"material": "不锈钢"}),
     ],
     edges=[
         EdgeSchema(edgeId=UUID("e1000000-0000-0000-0000-000000000001"), source=UUID("a1000000-0000-0000-0000-000000000001"), target=UUID("a1000000-0000-0000-0000-000000000002"), relation="contains"),

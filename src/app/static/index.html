@@ -164,10 +164,27 @@ async function loadProductGraph() {
     const data = await r.json();
     const pg = data.data;
     document.getElementById('pg-status').textContent = `${pg.nodes.length} 个节点，${pg.edges.length} 条边`;
+
+    // 构建节点 ID → 名称映射
+    const nodeMap = {};
+    pg.nodes.forEach(n => { nodeMap[n.nodeId] = { name: n.name, type: n.nodeType }; });
+
+    // 关系类型中文映射
+    const relMap = {
+      'contains': '包含',
+      'attached_to': '连接到',
+      'fastened_by': '被紧固于'
+    };
+
     document.getElementById('pg-content').innerHTML =
-      `<details><summary>节点列表（${pg.nodes.length}）</summary><table><tr><th>类型</th><th>名称</th></tr>` +
-      pg.nodes.map(n => `<tr><td>${n.nodeType === 'assembly' ? '装配体' : '零件'}</td><td>${n.name}</td></tr>`).join('') + '</table></details>' +
-      `<details style="margin-top:8px;"><summary>边列表（${pg.edges.length}）</summary><div class="json-view">${JSON.stringify(pg.edges, null, 2)}</div></details>`;
+      `<details><summary>节点列表（${pg.nodes.length}）</summary><table><tr><th>类型</th><th>名称</th><th style="text-align:center;">数量</th></tr>` +
+      pg.nodes.map(n => `<tr><td>${n.nodeType === 'assembly' ? '🔧 装配体' : '📦 零件'}</td><td>${n.name}</td><td style="text-align:center;">${n.quantity || 1}</td></tr>`).join('') + '</table></details>' +
+      `<details style="margin-top:8px;"><summary>边列表（${pg.edges.length}）</summary><table><tr><th>源</th><th>关系</th><th>目标</th></tr>` +
+      pg.edges.map(e => {
+        const src = nodeMap[e.source] ? nodeMap[e.source].name : e.source.substring(0,8)+'...';
+        const tgt = nodeMap[e.target] ? nodeMap[e.target].name : e.target.substring(0,8)+'...';
+        return `<tr><td>${src}</td><td>${relMap[e.relation] || e.relation}</td><td>${tgt}</td></tr>`;
+      }).join('') + '</table></details>';
     document.getElementById('card-graph').style.display = '';
     document.getElementById('card-generate').style.display = '';
     setStep(2);
