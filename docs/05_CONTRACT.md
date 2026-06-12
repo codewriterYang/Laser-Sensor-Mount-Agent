@@ -171,25 +171,9 @@ POST /api/v1/step/analyze
 
 ## Request
 
-```json
-{
-  "fileName": "laser_sensor_mount.step"
-}
-```
-
-------
-
-未来真实实现：
-
 ```multipart/form-data
 file=<step file>
 ```
-
-------
-
-MVP 阶段：
-
-允许先使用模拟文件。
 
 ------
 
