@@ -31,4 +31,13 @@ exports/
 # Environment
 .env
 logs/
-exports/
+
+# BOM 数据（运行时生成）
+data/bom/
+
+# 测试文件（不入库）
+ILD1x20-10.step
+ILD1x20-100.step
+
+# 工具目录
+.mimocode/
