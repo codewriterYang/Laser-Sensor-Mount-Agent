@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import UUID
 
@@ -68,6 +68,23 @@ def _get_cjk_font_path() -> str | None:
     return None
 
 
+_BEIJING_TZ = timezone(timedelta(hours=8))
+
+
+def _beijing_now_str() -> str:
+    """获取当前北京时间，格式：2026年6月12日22时30分15秒"""
+    now = datetime.now(_BEIJING_TZ)
+    return f"{now.year}年{now.month}月{now.day}日{now.hour}时{now.minute}分{now.second}秒"
+
+
+def _to_beijing_str(dt: datetime) -> str:
+    """将 datetime 转为北京时间字符串。"""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    bj = dt.astimezone(_BEIJING_TZ)
+    return f"{bj.year}年{bj.month}月{bj.day}日{bj.hour}时{bj.minute}分{bj.second}秒"
+
+
 def _make_pdf() -> FPDF:
     """创建 FPDF 实例，如果可用则添加 CJK 字体支持。"""
     pdf = FPDF()
@@ -89,9 +106,10 @@ class InstructionService:
         self.instruction_repo = InstructionRepository(db)
         self.image_service = ImageService()
 
-    def render(self, approved_process_id: UUID) -> tuple[UUID, AssemblyInstructionSchema]:
+    def render(self, approved_process_id: UUID, mode: str = "comparison") -> tuple[UUID, AssemblyInstructionSchema]:
         """从 ApprovedProcessGraph 渲染 AssemblyInstruction。
 
+        mode: "reference_only" | "text_and_image" | "comparison"
         返回 (instruction_id, AssemblyInstructionSchema)。
         """
         apg = self.approved_repo.get_by_id(approved_process_id)
@@ -101,12 +119,19 @@ class InstructionService:
         data = json.loads(apg.graph_json)
         approved = ApprovedProcessGraphSchema(**data)
 
-        # 通过链路追溯获取真实零件尺寸：ApprovedProcess → DraftProcess → ProductGraph
-        part_dims = self._get_part_dimensions(apg.draft_process_id)
+        # 通过链路追溯获取零件数据：ApprovedProcess → DraftProcess → ProductGraph
+        overall_dims, per_step_info = self._get_part_data(apg.draft_process_id)
 
-        # 为每个步骤生成图片（基于真实 STEP 尺寸数据，非 AI 虚构）
+        # 获取 STEP 文件文本（用于生成参考图）
+        step_text = self._get_step_text(apg.draft_process_id)
+
+        # 为每个步骤生成图片（基于真实 STEP 尺寸和曲面类型数据）
         step_dicts = [s.model_dump() for s in approved.steps]
-        image_paths = self.image_service.generate_all_step_images(step_dicts, part_dims)
+        image_paths = self.image_service.generate_all_step_images(
+            step_dicts, overall_dims, per_step_info,
+            step_text=step_text,
+            mode=mode,
+        )
 
         # 构建包含图片路径的章节
         sections = self._build_sections(approved, image_paths)
@@ -116,6 +141,7 @@ class InstructionService:
             instructionId=instruction_id,
             title=f"装配指导书 — {approved.approvedBy}",
             sections=sections,
+            mode=mode,
         )
 
         ai = AssemblyInstruction(
@@ -127,39 +153,242 @@ class InstructionService:
 
         return instruction_id, instruction
 
-    def _get_part_dimensions(self, draft_process_id: str | None) -> dict | None:
-        """通过链路追溯获取零件真实尺寸。
+    def render_stream(self, approved_process_id: UUID, mode: str = "comparison"):
+        """流式渲染 AssemblyInstruction，逐步 yield 进度事件。
 
-        ApprovedProcess → DraftProcess → ProductGraph → 从节点 metadata 中提取尺寸。
+        Yields:
+            dict: {"type": "progress|done|error", "step": N, "total": N, "message": "...", ...}
+        """
+        try:
+            apg = self.approved_repo.get_by_id(approved_process_id)
+            if apg is None:
+                yield {"type": "error", "message": f"未找到已审核工艺: {approved_process_id}"}
+                return
+
+            data = json.loads(apg.graph_json)
+            approved = ApprovedProcessGraphSchema(**data)
+
+            overall_dims, per_step_info = self._get_part_data(apg.draft_process_id)
+            step_text = self._get_step_text(apg.draft_process_id)
+
+            step_dicts = [s.model_dump() for s in approved.steps]
+            total = len(step_dicts)
+            image_paths = {}
+
+            # 逐步生成图片
+            for i, step in enumerate(step_dicts):
+                seq = i + 1  # 用循环索引作为步骤编号
+                title = step.get("title", "")
+
+                yield {
+                    "type": "progress",
+                    "step": i + 1,
+                    "total": total,
+                    "message": f"正在生成步骤 {i + 1}/{total}：{title}",
+                }
+
+                info = per_step_info.get(seq) if per_step_info else None
+                step_dims = None
+                if info:
+                    step_dims = {
+                        "length": info.get("length", 0),
+                        "width": info.get("width", 0),
+                        "height": info.get("height", 0),
+                    }
+
+                path = self.image_service.generate_step_image(
+                    title, step.get("description", ""), seq,
+                    total_steps=total,
+                    part_dimensions=step_dims or overall_dims,
+                    part_info=info,
+                    step_text=step_text,
+                    mode=mode,
+                )
+                if path:
+                    image_paths[seq] = path
+
+                yield {
+                    "type": "progress",
+                    "step": i + 1,
+                    "total": total,
+                    "message": f"步骤 {i + 1}/{total} 已完成：{title}",
+                    "image_path": path,
+                }
+
+            # 构建最终指导书
+            sections = self._build_sections(approved, image_paths)
+            instruction_id = uuid.uuid4()
+            instruction = AssemblyInstructionSchema(
+                instructionId=instruction_id,
+                title=f"装配指导书 — {approved.approvedBy}",
+                sections=sections,
+                mode=mode,
+            )
+
+            ai = AssemblyInstruction(
+                id=str(instruction_id),
+                approved_process_id=str(approved_process_id),
+                instruction_json=instruction.model_dump_json(),
+            )
+            self.instruction_repo.save(ai)
+
+            yield {
+                "type": "done",
+                "instructionId": str(instruction_id),
+                "message": f"指导书渲染完成，共 {total} 个步骤",
+            }
+
+        except Exception as e:
+            yield {"type": "error", "message": str(e)}
+
+    def _get_part_data(self, draft_process_id: str | None) -> tuple[dict | None, dict | None]:
+        """通过链路追溯获取零件数据。
+
+        ApprovedProcess → DraftProcess → ProductGraph → 从节点 metadata 中提取尺寸和曲面类型。
+        返回 (整体尺寸, 每步骤零件信息)。
         """
         if not draft_process_id:
-            return None
+            return None, None
         try:
-            from uuid import UUID
-            draft = self.draft_repo.get_by_id(UUID(draft_process_id))
+            from uuid import UUID as _UUID
+            draft = self.draft_repo.get_by_id(_UUID(draft_process_id))
             if not draft:
-                return None
-            import json
+                return None, None
+
             draft_data = json.loads(draft.graph_json)
             pg_id = draft_data.get("productGraphId") or draft.product_graph_id
             if not pg_id:
-                return None
-            pg = self.pg_repo.get_by_id(UUID(pg_id))
+                return None, None
+
+            pg = self.pg_repo.get_by_id(_UUID(pg_id))
             if not pg:
-                return None
+                return None, None
+
             pg_data = json.loads(pg.graph_json)
-            # 找第一个有尺寸数据的节点
-            for node in pg_data.get("nodes", []):
+            nodes = pg_data.get("nodes", [])
+            edges = pg_data.get("edges", [])
+
+            # 构建节点 ID → 节点信息映射
+            node_map = {}
+            for node in nodes:
+                node_map[node["nodeId"]] = node
+
+            # 获取整体尺寸（从装配体根节点）
+            overall_dims = None
+            for node in nodes:
                 meta = node.get("metadata", {})
                 if meta.get("length") and meta.get("width") and meta.get("height"):
-                    return {
+                    overall_dims = {
                         "length": meta["length"],
                         "width": meta["width"],
                         "height": meta["height"],
                     }
+                    break
+
+            # 从步骤的 requiredParts 匹配到零件节点
+            steps = draft_data.get("steps", [])
+            per_step_info = {}
+            for step in steps:
+                seq = step.get("sequence", 0)
+                required_parts = step.get("requiredParts", [])
+                # 在节点中查找匹配的零件
+                for node in nodes:
+                    node_name = node.get("name", "")
+                    if node_name in required_parts or any(p in node_name for p in required_parts):
+                        meta = node.get("metadata", {})
+                        info = {
+                            "name": node_name,
+                            "faceCount": meta.get("faceCount", 0),
+                            "surfaceTypes": meta.get("surfaceTypes", []),
+                            "length": meta.get("length", 0),
+                            "width": meta.get("width", 0),
+                            "height": meta.get("height", 0),
+                            "color": self._parse_color(meta.get("color")),
+                        }
+                        per_step_info[seq] = info
+                        break
+
+            return overall_dims, per_step_info
+
+        except Exception as e:
+            logger.warning(f"获取零件数据失败：{e}")
+            return None, None
+
+    def _get_step_text(self, draft_process_id: str | None) -> str | None:
+        """获取 STEP 文件文本（用于生成参考图）。
+
+        通过 DraftProcess → ProductGraph → 文件路径 → 读取文件。
+        """
+        if not draft_process_id:
+            return None
+        try:
+            from uuid import UUID as _UUID
+            draft = self.draft_repo.get_by_id(_UUID(draft_process_id))
+            if not draft:
+                return None
+
+            draft_data = json.loads(draft.graph_json)
+            pg_id = draft_data.get("productGraphId") or draft.product_graph_id
+            if not pg_id:
+                return None
+
+            pg = self.pg_repo.get_by_id(_UUID(pg_id))
+            if not pg:
+                return None
+
+            # 尝试从 ProductGraph metadata 获取文件路径
+            pg_data = json.loads(pg.graph_json)
+            file_path = pg_data.get("filePath") or pg_data.get("metadata", {}).get("filePath")
+
+            # 从根节点 metadata 中查找 filePath
+            if not file_path:
+                for node in pg_data.get("nodes", []):
+                    if node.get("nodeType") == "assembly":
+                        meta = node.get("metadata", {})
+                        file_path = meta.get("filePath")
+                        if file_path:
+                            break
+
+            if not file_path:
+                # 通过 ProductGraph.step_file_id 查找 StepFile 表
+                if hasattr(pg, 'step_file_id') and pg.step_file_id:
+                    from ..repositories.step_file_repository import StepFileRepository
+                    sf_repo = StepFileRepository(self.db)
+                    sf = sf_repo.get_by_id(UUID(pg.step_file_id))
+                    if sf and sf.file_path:
+                        file_path = sf.file_path
+
+            if not file_path:
+                # 最后尝试 uploads 目录中最新的 .step 文件
+                uploads_dir = Path("uploads")
+                step_files = sorted(
+                    uploads_dir.glob("*.step"),
+                    key=lambda f: f.stat().st_mtime,
+                    reverse=True,
+                )
+                if step_files:
+                    file_path = str(step_files[0])
+                    logger.warning(f"使用 uploads 目录最新文件作为 fallback: {file_path}")
+
+            if file_path and Path(file_path).exists():
+                return Path(file_path).read_text(encoding="utf-8", errors="replace")
+
             return None
         except Exception as e:
-            logger.warning(f"获取零件尺寸失败：{e}")
+            logger.warning(f"获取 STEP 文件文本失败：{e}")
+            return None
+
+    @staticmethod
+    def _parse_color(color_str: str | None) -> tuple[float, float, float] | None:
+        """解析 hex 颜色字符串为 (R, G, B) 元组（0.0~1.0）。"""
+        if not color_str or not color_str.startswith("#") or len(color_str) != 7:
+            return None
+        try:
+            r = int(color_str[1:3], 16) / 255.0
+            g = int(color_str[3:5], 16) / 255.0
+            b = int(color_str[5:7], 16) / 255.0
+            return (r, g, b)
+        except ValueError:
             return None
 
     def _build_sections(
@@ -169,7 +398,7 @@ class InstructionService:
         sections = [
             SectionSchema(
                 sectionType="cover",
-                content=f"装配指导书\n\n审核人：{approved.approvedBy}\n日期：{approved.approvedAt.isoformat()}",
+                content=f"装配指导书\n\n审核人：{approved.approvedBy}\n日期：{_to_beijing_str(approved.approvedAt)}",
             ),
             SectionSchema(
                 sectionType="overview",
@@ -195,7 +424,7 @@ class InstructionService:
         ))
         sections.append(SectionSchema(
             sectionType="ending",
-            content=f"装配指导书结束。生成时间：{datetime.now(timezone.utc).isoformat()}",
+            content=f"装配指导书结束。生成时间：{_beijing_now_str()}",
         ))
 
         return sections
@@ -228,9 +457,6 @@ class InstructionService:
 
             # 封面页
             pdf.add_page()
-            pdf.set_font(font_name, "B", 16)
-            pdf.cell(0, 10, "装配指导书", new_x="LMARGIN", new_y="NEXT", align="C")
-            pdf.ln(5)
 
             for section in instruction.sections:
                 if section.sectionType == "cover":
