@@ -1,8 +1,8 @@
 # PROJECT_STATUS — 项目状态追踪
 
-版本：v2.0
+版本：v4.0
 状态：Accepted
-最后更新：2026.6.12
+最后更新：2026.6.13
 
 ---
 
@@ -10,9 +10,9 @@
 
 | 项目 | 值 |
 |---|---|
-| **文档版本** | v2.0 |
-| **应用版本** | v0.4.0 |
-| **开发阶段** | Epic-1~4 MVP 核心闭环完成 |
+| **文档版本** | v4.0 |
+| **应用版本** | v0.6.0 |
+| **开发阶段** | Epic-1~4 MVP 核心闭环完成 + 渲染器重构 + 图片模式重构 |
 
 ---
 
@@ -28,7 +28,82 @@
 
 ---
 
-## 3. 本轮交付成果 (Phase 3: MVP 核心闭环)
+## 3. 本轮交付成果 (Phase 5: 图片模式重构 + 收尾)
+
+### 三种图片生成模式（重新定义）
+- **对比图**（reference_only）：线框参考图 + AI 生图（规则 Prompt，不接 DeepSeek）
+- **仅参考图**：只有线框参考图，无 AI
+- **文本加生图**（text_and_image）：DeepSeek 生成 Prompt → Seedream img2img
+
+### LLM Prompt 生成
+- `llm_service.py` 新增 `generate_image_prompt` 方法
+- `image_service.py` 的 `_generate_ai_bytes` 支持 `use_llm` 参数
+- 仅 `text_and_image` 模式使用 DeepSeek，其他模式用规则模板
+
+### 渲染器改进
+- 固定等轴测视角 `(25°, -30°)`
+- 缩放基于可见零件
+- 面填充（半透明体积感）
+- STEP 颜色直接提取（不依赖 part_info 匹配）
+
+### 前端修复
+- BOM 刷新 loading 状态
+- 模式选择器渲染中锁定
+- 审核完成消息去重（三阶段统一单条 badge）
+- Lightbox 鼠标滚轮缩放
+
+### 文档清理
+- 8 个过时审计文档归档到 `docs/archive/`
+- `PROJECT_CHECKLIST.md` 项目收尾清单
+
+---
+
+## 2. Epic 状态总览
+
+| Epic | 名称 | 实际判定 | 完成日期 |
+|---|---|---|---|
+| **Epic-1** | STEP 文件解析与 ProductGraph 生成 | ✅ COMPLETE | 2026.6.12 |
+| **Epic-2** | DraftProcessGraph 生成与审核 | ✅ COMPLETE | 2026.6.12 |
+| **Epic-3** | ApprovedProcessGraph 与 AssemblyInstruction | ✅ COMPLETE | 2026.6.12 |
+| **Epic-4** | MVP 边界与 Demo | ✅ COMPLETE | 2026.6.12 |
+| **Epic-5** | Assembly Knowledge Flywheel | ⏸️ Deferred（非 MVP） | — |
+
+---
+
+## 3. 本轮交付成果 (Phase 4: 渲染器重构)
+
+### reference_renderer 重构
+- **文件**：`src/app/services/reference_renderer.py`
+- **改进**：
+  - 固定等轴测视角 `(25°, -30°)`，所有步骤一致
+  - 缩放基于可见零件包围盒，零件占画布主体
+  - 全局坐标归位，零件保持 STEP 中的真实位置
+  - per-part 颜色支持（从 STEP COLOUR_RGB 自动提取）
+  - 修复 x/y 坐标混算 bug
+  - 颜色值 clamp 到 `[0, 255]` 防止极端角度溢出
+
+### image_service 改进
+- **文件**：`src/app/services/image_service.py`
+- **改进**：
+  - 直接从 STEP 文件提取颜色（不依赖 part_info 匹配）
+  - 步骤编号改用循环索引（防止审核后编号不连续）
+
+### 前端改进
+- **文件**：src/app/static/index.html
+- **改进**：
+  - BOM 刷新按钮 loading 状态（⏳→✅→恢复）
+  - 上传时 loading 反馈（半透明+禁止点击）
+  - 模式选择器渲染中锁定，完成后恢复
+  - Lightbox 鼠标滚轮缩放
+  - 修复 BOM stats `custom_files` 访问 TypeError
+
+### 日志优化
+- **文件**：src/app/main.py
+- **改进**：过滤 favicon.ico、chrome.devtools.json 等噪音 access log
+
+---
+
+## 3. 历史交付成果 (Phase 3: MVP 核心闭环)
 
 ### 真实 STEP 解析器
 - **文件**：`src/app/services/step_parser.py`
@@ -90,10 +165,10 @@
 | 测试类型 | 通过 | 说明 |
 |---|---|---|
 | **Contract Test** | 20 | Epic-1~3 全部端点 |
-| **Unit Test** | 43 | Epic-1/2/3 Service + **StepParser (7 new)** |
+| **Unit Test** | 119 | Service + Renderer + BOM + Quality + Multiview |
 | **Integration Test** | 17 | 全部 6 个 Repository |
-| **E2E Test** | 22 | Epic-1/2/3/4 完整链路 |
-| **总计** | **102** | **0 failed, 0 skipped** |
+| **E2E Test** | 17 | Epic-1/2/3/4 完整链路 |
+| **总计** | **161** | **0 failed, 0 skipped** |
 
 **E2E 验证**：使用真实 ILD1x20-100.step 完成完整链路 → PDF 输出成功。
 
@@ -104,12 +179,12 @@
 | 文档 | 状态 |
 |---|---|
 | 01_PRD.md ↔ 实际 | ✅ |
-| 03_ARCHITECTURE.md ↔ 实际 | ✅（Review UI 已实现为前端 SPA） |
+| 03_ARCHITECTURE.md ↔ 实际 | ✅ |
 | 05_CONTRACT.md ↔ 实际 | ✅ |
 | 06_DATABASE.md ↔ 实际 | ✅ |
 | 07_EPICS.md ↔ PROJECT_STATUS.md | ✅ |
-| CLAUDE.md commit 格式 | ✅ 已修正 |
-| .env.example | ✅ 已修正 IMAGE_API_KEY |
+| PROJECT_STATUS.md | ✅ v3.0 已更新 |
+| docs/archive/ | ✅ 8 个过时审计文档已归档 |
 
 ---
 
