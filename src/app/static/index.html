@@ -7,41 +7,46 @@
 <style>
 :root {
   --bg: #f5f7fa; --card: #fff; --primary: #2563eb; --danger: #dc2626;
-  --success: #16a34a; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+  --success: #16a34a; --warn: #d97706; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
   --radius: 8px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'PingFang SC', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
 .container { max-width: 960px; margin: 0 auto; padding: 20px; }
 h1 { font-size: 1.5rem; margin-bottom: 8px; }
-h2 { font-size: 1.1rem; margin-bottom: 12px; color: var(--primary); }
 .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
 
-.stepper { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-.step-dot { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; background: var(--border); color: var(--muted); font-weight: 600; }
+.stepper { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+.step-dot { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; background: var(--border); color: var(--muted); font-weight: 600; transition: .2s; }
 .step-dot.active { background: var(--primary); color: #fff; }
 .step-dot.done { background: var(--success); color: #fff; }
 
 .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
 .card h3 { font-size: 0.95rem; margin-bottom: 12px; }
 
-.btn { padding: 8px 18px; border: none; border-radius: var(--radius); font-size: 0.9rem; cursor: pointer; font-weight: 600; transition: .15s; }
+.btn { padding: 8px 18px; border: none; border-radius: var(--radius); font-size: 0.85rem; cursor: pointer; font-weight: 600; transition: .15s; }
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { opacity: 0.9; }
 .btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { opacity: 0.9; }
 .btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { opacity: 0.9; }
+.btn-warn { background: var(--warn); color: #fff; }
+.btn-warn:hover { opacity: 0.9; }
+.btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+.btn-outline:hover { background: #f0f4ff; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-sm { padding: 4px 12px; font-size: 0.8rem; }
 
 .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
 .upload-zone:hover { border-color: var(--primary); background: #f0f4ff; }
+.upload-zone.done { border-color: var(--success); background: #f0fdf4; cursor: default; }
 .upload-zone input { display: none; }
 
-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th { text-align: left; padding: 8px; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.8rem; text-transform: uppercase; }
 td { padding: 8px; border-bottom: 1px solid var(--border); }
 tr:hover { background: #f8fafc; }
-
-.json-view { background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: var(--radius); font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem; max-height: 300px; overflow: auto; white-space: pre-wrap; }
 
 .review-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .review-row .step-info { flex: 1; }
@@ -53,6 +58,7 @@ tr:hover { background: #f8fafc; }
 .badge-success { background: #dcfce7; color: #166534; }
 .badge-warn { background: #fef9c3; color: #854d0e; }
 .badge-error { background: #fee2e2; color: #991b1b; }
+.badge-info { background: #dbeafe; color: #1e40af; }
 
 .toast { position: fixed; top: 16px; right: 16px; padding: 12px 20px; border-radius: var(--radius); color: #fff; font-weight: 600; z-index: 999; animation: fadeIn .3s; }
 .toast.error { background: var(--danger); }
@@ -61,68 +67,163 @@ tr:hover { background: #f8fafc; }
 
 .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.review-panel { background: #fffbeb; border: 1px solid #fbbf24; border-radius: var(--radius); padding: 12px; margin: 8px 0; }
+.review-panel h4 { color: var(--warn); font-size: 0.85rem; margin-bottom: 6px; }
+
+/* 图片缩放 lightbox */
+.zoom-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; display: none; justify-content: center; align-items: center; cursor: zoom-out; }
+.zoom-overlay.active { display: flex; }
+.zoom-overlay img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 8px; transition: transform 0.2s; }
+.zoom-controls { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10000; }
+.zoom-controls button { padding: 8px 16px; border: none; border-radius: 6px; background: rgba(255,255,255,0.9); cursor: pointer; font-size: 1rem; }
+.zoom-controls button:hover { background: #fff; }
+.zoomable { cursor: zoom-in; transition: box-shadow 0.2s; }
+.zoomable:hover { box-shadow: 0 0 0 3px rgba(59,130,246,0.4); }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>激光传感器装配指导系统</h1>
-  <p class="subtitle">STEP CAD → 产品结构图 → 装配流程 → 工程师审核 → PDF 指导书</p>
+  <p class="subtitle">STEP CAD → 产品结构 → 装配流程 → 指导书 → PDF（三阶段审核）</p>
 
   <div class="stepper">
-    <span class="step-dot" id="s1">1. 上传 STEP 文件</span>
-    <span class="step-dot" id="s2">2. 查看产品结构</span>
-    <span class="step-dot" id="s3">3. 生成装配流程</span>
-    <span class="step-dot" id="s4">4. 工程师审核</span>
-    <span class="step-dot" id="s5">5. 导出 PDF 指导书</span>
+    <span class="step-dot" id="s1">1. 上传STEP</span>
+    <span class="step-dot" id="r1">🔍 结构审核</span>
+    <span class="step-dot" id="s3">2. 生成流程</span>
+    <span class="step-dot" id="r2">🔍 流程审核</span>
+    <span class="step-dot" id="s5">3. 渲染指导书</span>
+    <span class="step-dot" id="r3">🔍 指导书审核</span>
+    <span class="step-dot" id="s7">4. 导出PDF</span>
   </div>
 
-  <!-- 第1步：上传 -->
-  <div class="card" id="card-upload">
-    <h3>📁 上传 STEP 文件</h3>
-    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
-      <p>点击此处选择 .step 文件，或直接拖拽文件到此处</p>
-      <p style="color:var(--muted);font-size:0.8rem;">支持格式：ISO 10303-21（AP203/AP214）</p>
-      <input type="file" id="file-input" accept=".step,.stp" onchange="uploadFile()">
+  <!-- 上传 STEP 文件 + BOM 库（左右布局） -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+    <!-- 左侧：上传 -->
+    <div class="card" id="card-upload">
+      <h3>📁 上传 STEP 文件</h3>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <p id="upload-text">点击此处选择 .step 文件，或直接拖拽文件到此处</p>
+        <p style="color:var(--muted);font-size:0.8rem;">支持格式：ISO 10303-21（AP203/AP214）</p>
+        <input type="file" id="file-input" accept=".step,.stp" onchange="uploadFile()">
+      </div>
+      <div id="upload-status" style="margin-top:8px;"></div>
     </div>
-    <div id="upload-status" style="margin-top:8px;"></div>
+
+    <!-- 右侧：BOM 库 -->
+    <div class="card" id="card-bom">
+      <h3>📦 BOM 零件库</h3>
+      <p style="font-size:0.82rem;color:#64748b;margin-bottom:8px;">BOM 数据可提升零件识别和图片还原度。支持导入/导出 JSON。</p>
+      <div class="actions">
+        <button class="btn btn-outline btn-sm" id="bom-refresh-btn" onclick="loadBomStats()">🔄 刷新</button>
+        <button class="btn btn-outline btn-sm" onclick="exportBom()">导出</button>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;">
+          导入 <input type="file" accept=".json" onchange="importBom(this)" style="display:none;">
+        </label>
+      </div>
+      <div id="bom-detail" style="margin-top:8px;font-size:0.82rem;"></div>
+    </div>
   </div>
 
-  <!-- 第2步：产品结构 -->
+  <!-- 产品结构图 -->
   <div class="card" id="card-graph" style="display:none;">
     <h3>📊 产品结构图 <span id="pg-status" class="badge badge-success"></span></h3>
     <div id="pg-content"></div>
+    <div class="review-panel" id="review1-panel">
+      <h4>🔍 第一阶段审核：产品结构</h4>
+      <p style="font-size:0.85rem;margin-bottom:8px;">请确认产品结构图中的零件和关系是否正确。如有问题，可重新上传文件。</p>
+      <div class="actions" id="review1-actions">
+        <button class="btn btn-success btn-sm" onclick="reviewProductGraph('accept')">✅ 确认结构正确</button>
+        <button class="btn btn-danger btn-sm" onclick="reviewProductGraph('reject')">❌ 重新上传</button>
+      </div>
+    </div>
   </div>
 
-  <!-- 第3步：生成流程 -->
+  <!-- 生成装配流程 -->
   <div class="card" id="card-generate" style="display:none;">
     <h3>⚙️ 生成装配流程</h3>
     <button class="btn btn-primary" id="btn-generate" onclick="generateProcess()">生成草稿工艺流程</button>
     <div id="draft-content" style="margin-top:12px;"></div>
-  </div>
-
-  <!-- 第4步：审核 -->
-  <div class="card" id="card-review" style="display:none;">
-    <h3>✅ 工程师审核</h3>
-    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px;">对每个步骤选择操作：接受、修改或删除，可选填理由</p>
-    <div id="review-steps"></div>
-    <div class="actions">
-      <button class="btn btn-success" id="btn-submit" onclick="submitReview()">提交审核结果</button>
+    <div id="review2-panel" style="display:none;">
+      <div class="review-panel" id="review2-header">
+        <h4>🔍 第二阶段审核：装配流程</h4>
+        <p style="font-size:0.85rem;margin-bottom:8px;">对每个步骤选择操作：接受、修改或删除</p>
+      </div>
+      <div id="review-steps"></div>
+      <div class="actions" id="review2-actions">
+        <button class="btn btn-success" id="btn-submit" onclick="submitReview()">提交审核结果</button>
+        <button class="btn btn-outline" onclick="rollbackToProductGraph()">⬅ 回退到产品结构</button>
+      </div>
+      <div id="review-result" style="margin-top:12px;"></div>
     </div>
-    <div id="review-result" style="margin-top:12px;"></div>
   </div>
 
-  <!-- 第5步：指导书与PDF -->
+  <!-- 指导书 -->
   <div class="card" id="card-instruction" style="display:none;">
-    <h3>📄 装配指导书与 PDF 导出</h3>
-    <button class="btn btn-primary" id="btn-render" onclick="renderInstruction()">渲染装配指导书</button>
-    <button class="btn btn-success" id="btn-pdf" onclick="exportPdf()" style="display:none;">导出 PDF</button>
+    <h3>📄 渲染装配指导书</h3>
+    <div style="margin:12px 0;">
+      <label style="font-size:0.85rem;font-weight:600;margin-bottom:6px;display:block;">图片生成模式：</label>
+      <div id="mode-selector" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.82rem;">
+          <input type="radio" name="imgMode" value="comparison" checked> 🔄 对比图（参考+AI）
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.82rem;">
+          <input type="radio" name="imgMode" value="reference_only"> 📐 仅参考图
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.82rem;">
+          <input type="radio" name="imgMode" value="text_and_image"> 🎨 文本加生图（AI增强）
+        </label>
+      </div>
+    </div>
+    <div class="actions" id="render-actions">
+      <button class="btn btn-primary" id="btn-render" onclick="renderInstruction()">渲染装配指导书</button>
+      <button class="btn btn-outline" onclick="rollbackToProcessReview()">⬅ 回退到流程审核</button>
+    </div>
     <div id="instruction-content" style="margin-top:12px;"></div>
+    <div id="review3-panel" style="display:none;">
+      <div class="review-panel" id="review3-header">
+        <h4>🔍 第三阶段审核：指导书与图片</h4>
+        <p style="font-size:0.85rem;margin-bottom:8px;">确认指导书内容和图片是否满意。可切换模式重新生成图片。</p>
+      </div>
+      <!-- 重新生成时的模式选择 -->
+      <div style="margin:8px 0;padding:8px;background:#f8fafc;border-radius:6px;border:1px solid var(--border);">
+        <label style="font-size:0.82rem;font-weight:600;margin-bottom:4px;display:block;">重新生成时使用模式：</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:0.78rem;">
+            <input type="radio" name="imgMode2" value="comparison" checked> 🔄 对比图
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:0.78rem;">
+            <input type="radio" name="imgMode2" value="reference_only"> 📐 仅参考图
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:0.78rem;">
+            <input type="radio" name="imgMode2" value="text_and_image"> 🎨 文本加生图
+          </label>
+        </div>
+      </div>
+      <div class="actions" id="review3-actions">
+        <button class="btn btn-success btn-sm" onclick="reviewInstruction('approve')">✅ 确认指导书</button>
+        <button class="btn btn-warn btn-sm" id="btn-regen" onclick="reviewInstruction('regenerate_images')">🔄 重新生成图片</button>
+        <button class="btn btn-danger btn-sm" onclick="reviewInstruction('reject')">❌ 驳回（回退到流程生成）</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF 导出 -->
+  <div class="card" id="card-pdf" style="display:none;">
+    <h3>📥 导出 PDF 指导书</h3>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-pdf" onclick="exportPdf()">导出 PDF</button>
+    </div>
+    <div id="pdf-result" style="margin-top:12px;"></div>
   </div>
 </div>
 
 <script>
 const API = '/api/v1';
-let state = { stepFileId: null, productGraphId: null, processId: null, steps: [], approvedId: null, instructionId: null };
+let state = {
+  stepFileId: null, productGraphId: null, processId: null,
+  steps: [], approvedId: null, instructionId: null, currentStep: 0,
+};
 
 function toast(msg, type='success') {
   const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
@@ -130,34 +231,55 @@ function toast(msg, type='success') {
 }
 
 function setStep(n) {
-  for (let i=1; i<=5; i++) {
-    const el = document.getElementById(`s${i}`);
-    el.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+  state.currentStep = n;
+  const dots = [
+    { id: 's1', step: 1 }, { id: 'r1', step: 2 },
+    { id: 's3', step: 3 }, { id: 'r2', step: 4 },
+    { id: 's5', step: 5 }, { id: 'r3', step: 6 },
+    { id: 's7', step: 7 },
+  ];
+  for (const dot of dots) {
+    const el = document.getElementById(dot.id);
+    el.className = 'step-dot' + (dot.step < n ? ' done' : dot.step === n ? ' active' : '');
   }
 }
 
-// 第1步：上传 STEP 文件
+// === 上传 STEP ===
 async function uploadFile() {
   const file = document.getElementById('file-input').files[0];
   if (!file) return;
   const zone = document.getElementById('upload-zone');
-  zone.innerHTML = '<div class="spinner"></div> 正在解析 STEP 文件...';
+  const text = document.getElementById('upload-text');
+  text.innerHTML = '⏳ 正在解析 STEP 文件并生成 BOM 库，请稍候...';
+  zone.style.opacity = '0.6';
+  zone.style.pointerEvents = 'none';
 
   const form = new FormData(); form.append('file', file);
   try {
     const r = await fetch(`${API}/step/analyze`, { method: 'POST', body: form });
     const data = await r.json();
-    if (!data.success) { toast(data.error.message, 'error'); zone.innerHTML = '<p>点击此处选择 .step 文件，或直接拖拽文件到此处</p>'; return; }
+    if (!data.success) { toast(data.error.message, 'error'); text.textContent = '点击此处选择 .step 文件'; zone.style.opacity = '1'; zone.style.pointerEvents = ''; return; }
 
     state.productGraphId = data.data.productGraphId;
     state.stepFileId = data.data.stepFileId;
-    document.getElementById('upload-status').innerHTML = `<span class="badge badge-success">✅ 已解析：${file.name}</span>`;
-    setStep(2);
+    state.uploadedFileName = file.name;
+
+    zone.classList.add('done');
+    zone.onclick = null;
+    zone.style.opacity = '1';
+    text.innerHTML = `✅ 已解析：${file.name}`;
+    document.getElementById('upload-status').innerHTML =
+      `<span class="badge badge-success">解析完成</span> <small style="color:var(--muted);margin-left:8px;">BOM 已自动生成</small>`;
+
+    loadBomStats();
+    // 新任务：解锁模式选择器
+    document.querySelectorAll('input[name="imgMode"]').forEach(r => r.disabled = false);
+    setStep(1);
     loadProductGraph();
-  } catch(e) { toast('上传失败：' + e.message, 'error'); zone.innerHTML = '<p>点击此处选择 .step 文件，或直接拖拽文件到此处</p>'; }
+  } catch(e) { toast('上传失败：' + e.message, 'error'); text.textContent = '点击此处选择 .step 文件'; zone.style.opacity = '1'; zone.style.pointerEvents = ''; }
 }
 
-// 第2步：查看产品结构
+// === 产品结构图 ===
 async function loadProductGraph() {
   try {
     const r = await fetch(`${API}/product-graphs/${state.productGraphId}`);
@@ -165,33 +287,62 @@ async function loadProductGraph() {
     const pg = data.data;
     document.getElementById('pg-status').textContent = `${pg.nodes.length} 个节点，${pg.edges.length} 条边`;
 
-    // 构建节点 ID → 名称映射
     const nodeMap = {};
-    pg.nodes.forEach(n => { nodeMap[n.nodeId] = { name: n.name, type: n.nodeType }; });
+    pg.nodes.forEach(n => { nodeMap[n.nodeId] = { name: n.name, type: n.nodeType, quantity: n.quantity || 1, metadata: n.metadata || {} }; });
+    const relMap = { 'contains': '包含', 'attached_to': '连接到', 'fastened_by': '被紧固于' };
 
-    // 关系类型中文映射
-    const relMap = {
-      'contains': '包含',
-      'attached_to': '连接到',
-      'fastened_by': '被紧固于'
-    };
+    let nodesHtml = `<details open><summary>节点列表（${pg.nodes.length}）</summary><table>
+      <tr><th>类型</th><th>名称</th><th style="text-align:center;">数量</th><th>特征</th></tr>`;
+    pg.nodes.forEach(n => {
+      const meta = n.metadata || {};
+      const features = [];
+      if (meta.faceCount) features.push(`${meta.faceCount}面`);
+      if (meta.surfaceTypes && meta.surfaceTypes.length) features.push(meta.surfaceTypes.join('、'));
+      if (meta.length) features.push(`${meta.length}×${meta.width}×${meta.height}mm`);
+      const featureStr = features.length ? `<small style="color:var(--muted)">${features.join(' | ')}</small>` : '';
+      nodesHtml += `<tr><td>${n.nodeType === 'assembly' ? '🔧 装配体' : '📦 零件'}</td><td>${n.name}</td><td style="text-align:center;">${n.quantity || 1}</td><td>${featureStr}</td></tr>`;
+    });
+    nodesHtml += '</table></details>';
 
-    document.getElementById('pg-content').innerHTML =
-      `<details><summary>节点列表（${pg.nodes.length}）</summary><table><tr><th>类型</th><th>名称</th><th style="text-align:center;">数量</th></tr>` +
-      pg.nodes.map(n => `<tr><td>${n.nodeType === 'assembly' ? '🔧 装配体' : '📦 零件'}</td><td>${n.name}</td><td style="text-align:center;">${n.quantity || 1}</td></tr>`).join('') + '</table></details>' +
-      `<details style="margin-top:8px;"><summary>边列表（${pg.edges.length}）</summary><table><tr><th>源</th><th>关系</th><th>目标</th></tr>` +
-      pg.edges.map(e => {
-        const src = nodeMap[e.source] ? nodeMap[e.source].name : e.source.substring(0,8)+'...';
-        const tgt = nodeMap[e.target] ? nodeMap[e.target].name : e.target.substring(0,8)+'...';
-        return `<tr><td>${src}</td><td>${relMap[e.relation] || e.relation}</td><td>${tgt}</td></tr>`;
-      }).join('') + '</table></details>';
+    let edgesHtml = `<details style="margin-top:8px;"><summary>关系列表（${pg.edges.length}）</summary><table>
+      <tr><th>源</th><th>关系</th><th>目标</th></tr>`;
+    pg.edges.forEach(e => {
+      const src = nodeMap[e.source] ? nodeMap[e.source].name : e.source.substring(0,8)+'...';
+      const tgt = nodeMap[e.target] ? nodeMap[e.target].name : e.target.substring(0,8)+'...';
+      edgesHtml += `<tr><td>${src}</td><td>${relMap[e.relation] || e.relation}</td><td>${tgt}</td></tr>`;
+    });
+    edgesHtml += '</table></details>';
+
+    document.getElementById('pg-content').innerHTML = nodesHtml + edgesHtml;
     document.getElementById('card-graph').style.display = '';
-    document.getElementById('card-generate').style.display = '';
     setStep(2);
   } catch(e) { toast('加载产品结构失败：' + e.message, 'error'); }
 }
 
-// 第3步：生成装配流程
+// === 第一阶段审核：产品结构 ===
+async function reviewProductGraph(action) {
+  if (action === 'reject') {
+    if (!confirm('确认重新上传？当前数据将丢弃。')) return;
+    resetAll();
+    return;
+  }
+  try {
+    const r = await fetch(`${API}/product-graphs/review`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ productGraphId: state.productGraphId, action: 'accept', reason: '确认' })
+    });
+    const data = await r.json();
+    if (!data.success) { toast(data.error.message, 'error'); return; }
+
+    document.getElementById('review1-panel').innerHTML =
+      '<span class="badge badge-success">✅ 产品结构已确认</span>';
+    document.getElementById('card-generate').style.display = '';
+    setStep(3);
+    toast('产品结构已确认');
+  } catch(e) { toast('审核失败：' + e.message, 'error'); }
+}
+
+// === 生成装配流程 ===
 async function generateProcess() {
   document.getElementById('btn-generate').disabled = true;
   document.getElementById('btn-generate').innerHTML = '<span class="spinner"></span> 正在生成...';
@@ -207,80 +358,65 @@ async function generateProcess() {
     state.processId = data.data.processId;
     state.steps = data.data.steps;
     document.getElementById('draft-content').innerHTML =
-      `<p>状态：<span class="badge badge-warn">${data.data.status === 'reviewing' ? '待审核' : data.data.status}</span> — 共 ${state.steps.length} 个步骤</p>` +
+      `<p>状态：<span class="badge badge-warn">待审核</span> — 共 ${state.steps.length} 个步骤</p>` +
       `<table><tr><th>序号</th><th>标题</th><th>描述</th></tr>` +
       state.steps.map(s => `<tr><td>${s.sequence}</td><td>${s.title}</td><td>${s.description}</td></tr>`).join('') + '</table>';
-    document.getElementById('card-review').style.display = '';
+
+    document.getElementById('btn-generate').style.display = 'none';
+    // 关键修复：重置审核面板状态（回退后重新生成时）
+    document.getElementById('review2-panel').style.display = '';
+    document.getElementById('review-steps').style.display = '';
+    document.getElementById('btn-submit').style.display = '';
+    document.getElementById('review2-header').innerHTML =
+      '<h4>🔍 第二阶段审核：装配流程</h4><p style="font-size:0.85rem;margin-bottom:8px;">对每个步骤选择操作：接受、修改或删除</p>';
+    document.getElementById('review2-actions').style.display = '';
+    document.getElementById('review-result').innerHTML = '';
+    document.getElementById('card-instruction').style.display = 'none';
     buildReviewUI();
-    setStep(3);
+    setStep(4);
   } catch(e) { toast('生成失败：' + e.message, 'error'); }
   finally { document.getElementById('btn-generate').disabled = false; document.getElementById('btn-generate').textContent = '生成草稿工艺流程'; }
 }
 
-// 第4步：审核界面
+// === 第二阶段审核 ===
 function buildReviewUI() {
   document.getElementById('review-steps').innerHTML = state.steps.map(s => `
     <div class="review-row" id="row-${s.stepId}">
       <span style="font-weight:600;width:24px;">${s.sequence}.</span>
-      <div class="step-info" id="info-${s.stepId}">
-        <strong>${s.title}</strong><br>
-        <small style="color:var(--muted)">${s.description}</small>
-      </div>
+      <div class="step-info"><strong>${s.title}</strong><br><small style="color:var(--muted)">${s.description}</small></div>
       <div style="display:flex;flex-direction:column;gap:4px;min-width:320px;">
-        <select id="action-${s.stepId}" onchange="onActionChange('${s.stepId}')" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);">
-          <option value="accept">✅ 接受</option>
-          <option value="modify">✏️ 修改</option>
-          <option value="delete">🗑️ 删除</option>
+        <select id="action-${s.stepId}" onchange="onActionChange('${s.stepId}')">
+          <option value="accept">✅ 接受</option><option value="modify">✏️ 修改</option><option value="delete">🗑️ 删除</option>
         </select>
         <div id="modify-fields-${s.stepId}" style="display:none;flex-direction:column;gap:4px;">
           <input id="new-title-${s.stepId}" value="${s.title}" placeholder="新标题" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;">
           <textarea id="new-desc-${s.stepId}" placeholder="新描述" rows="2" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;resize:vertical;">${s.description}</textarea>
         </div>
-        <div id="delete-confirm-${s.stepId}" style="display:none;color:var(--danger);font-size:0.8rem;">
-          ⚠️ 此步骤将被删除，不可恢复
-        </div>
+        <div id="delete-confirm-${s.stepId}" style="display:none;color:var(--danger);font-size:0.8rem;">⚠️ 此步骤将被删除</div>
       </div>
     </div>
   `).join('');
-  setStep(4);
 }
 
 function onActionChange(stepId) {
   const action = document.getElementById(`action-${stepId}`).value;
-  const modFields = document.getElementById(`modify-fields-${stepId}`);
-  const delConfirm = document.getElementById(`delete-confirm-${stepId}`);
+  document.getElementById(`modify-fields-${stepId}`).style.display = action === 'modify' ? 'flex' : 'none';
+  document.getElementById(`delete-confirm-${stepId}`).style.display = action === 'delete' ? 'block' : 'none';
   const row = document.getElementById(`row-${stepId}`);
-
-  modFields.style.display = action === 'modify' ? 'flex' : 'none';
-  delConfirm.style.display = action === 'delete' ? 'block' : 'none';
-
-  // 行背景色变化提示
-  if (action === 'delete') {
-    row.style.background = '#fee2e2';
-  } else if (action === 'modify') {
-    row.style.background = '#fef9c3';
-  } else {
-    row.style.background = '';
-  }
+  row.style.background = action === 'delete' ? '#fee2e2' : action === 'modify' ? '#fef9c3' : '';
 }
 
 async function submitReview() {
   const decisions = state.steps.map(s => {
     const action = document.getElementById(`action-${s.stepId}`).value;
-    const decision = { stepId: s.stepId, action: action };
-
+    const decision = { stepId: s.stepId, action };
     if (action === 'modify') {
       decision.reason = document.getElementById(`new-desc-${s.stepId}`).value || s.description;
       decision.newTitle = document.getElementById(`new-title-${s.stepId}`).value || s.title;
-    } else if (action === 'delete') {
-      decision.reason = '工程师删除此步骤';
-    } else {
-      decision.reason = '审核通过';
-    }
+    } else { decision.reason = action === 'delete' ? '工程师删除此步骤' : '审核通过'; }
     return decision;
   });
 
-  // 确认提示
   const modifyCount = decisions.filter(d => d.action === 'modify').length;
   const deleteCount = decisions.filter(d => d.action === 'delete').length;
   if (modifyCount > 0 || deleteCount > 0) {
@@ -299,68 +435,219 @@ async function submitReview() {
     if (!data.success) { toast(data.error.message, 'error'); return; }
 
     state.approvedId = data.data.approvedProcessId;
-    document.getElementById('review-result').innerHTML =
-      `<span class="badge badge-success">✅ 已批准：${state.approvedId}</span>`;
+    document.getElementById('review2-header').innerHTML =
+      '<span class="badge badge-success">✅ 装配流程已审核通过</span>';
+    document.getElementById('review-steps').style.display = 'none';
+    document.getElementById('review2-actions').style.display = 'none';
+
+    // 关键修复：确保指导书卡片的渲染按钮可见
     document.getElementById('card-instruction').style.display = '';
+    document.getElementById('render-actions').style.display = '';
+    document.getElementById('btn-render').style.display = '';
+    document.getElementById('instruction-content').innerHTML = '';
+    document.getElementById('review3-panel').style.display = 'none';
+    document.getElementById('card-pdf').style.display = 'none';
+
     setStep(5);
+    toast('装配流程审核通过');
   } catch(e) { toast('审核失败：' + e.message, 'error'); }
 }
 
-// 第5步：渲染指导书
+function rollbackToProductGraph() {
+  if (!confirm('确认回退到产品结构审核阶段？当前流程将丢弃。')) return;
+  state.processId = null; state.steps = []; state.approvedId = null;
+  document.getElementById('draft-content').innerHTML = '';
+  document.getElementById('review2-panel').style.display = 'none';
+  document.getElementById('review-result').innerHTML = '';
+  document.getElementById('btn-generate').style.display = '';
+  document.getElementById('card-instruction').style.display = 'none';
+  setStep(2);
+  toast('已回退到产品结构审核阶段');
+}
+
+function rollbackToProcessReview() {
+  if (!confirm('确认回退？当前指导书将丢弃，需重新提交流程审核。')) return;
+  state.instructionId = null; state.approvedId = null;
+  document.getElementById('instruction-content').innerHTML = '';
+  document.getElementById('review3-panel').style.display = 'none';
+  document.getElementById('btn-render').style.display = '';
+  document.getElementById('card-pdf').style.display = 'none';
+  document.getElementById('card-instruction').style.display = 'none';
+  // 重新显示流程审核
+  document.getElementById('review2-header').innerHTML =
+    '<h4>🔍 第二阶段审核：装配流程</h4><p style="font-size:0.85rem;margin-bottom:8px;">对每个步骤选择操作：接受、修改或删除</p>';
+  document.getElementById('review2-actions').style.display = '';
+  document.getElementById('review-steps').style.display = '';
+  document.getElementById('btn-submit').style.display = '';
+  document.getElementById('review-result').innerHTML = '';
+  setStep(4);
+  toast('已回退到流程审核阶段');
+}
+
+// === 渲染指导书（SSE 流式） ===
 async function renderInstruction() {
   document.getElementById('btn-render').disabled = true;
-  document.getElementById('btn-render').innerHTML = '<span class="spinner"></span> 正在渲染并生成图片...';
+  document.getElementById('btn-render').innerHTML = '<span class="spinner"></span> 正在渲染...';
+  // 锁定模式选择器
+  document.querySelectorAll('input[name="imgMode"]').forEach(r => r.disabled = true);
+  const mode = document.querySelector('input[name="imgMode"]:checked')?.value || 'comparison';
 
   try {
-    const r = await fetch(`${API}/instruction/render`, {
+    // 使用 SSE 流式端点
+    const response = await fetch(`${API}/instruction/render-stream`, {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({approvedProcessId: state.approvedId})
+      body: JSON.stringify({approvedProcessId: state.approvedId, mode: mode})
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let instructionId = null;
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, {stream: true});
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // 保留不完整的行
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const event = JSON.parse(line.slice(6));
+
+          if (event.type === 'progress') {
+            document.getElementById('btn-render').innerHTML =
+              `<span class="spinner"></span> ${event.message}`;
+          } else if (event.type === 'done') {
+            instructionId = event.instructionId;
+            toast(event.message);
+          } else if (event.type === 'error') {
+            toast(event.message, 'error');
+          }
+        } catch(e) { /* 忽略解析错误 */ }
+      }
+    }
+
+    if (instructionId) {
+      state.instructionId = instructionId;
+      // 获取完整指导书并展示
+      const r2 = await fetch(`${API}/instruction/${state.instructionId}`);
+      const d2 = await r2.json();
+      const sections = d2.data.sections;
+
+      let html = `<h2 style="margin:16px 0 12px;">📄 装配指导书预览</h2>`;
+      for (const s of sections) {
+        const typeNames = { cover: '📋 封面', overview: '📖 概述', step: '🔧 装配步骤', safety: '⚠️ 安全须知', ending: '✅ 尾页' };
+        html += `<div class="card" style="margin:8px 0;"><h3 style="font-size:0.9rem;color:var(--primary);">${typeNames[s.sectionType] || s.sectionType}</h3>`;
+        for (const line of s.content.split('\n').filter(l => l.trim())) {
+          html += `<p style="margin:4px 0;font-size:0.9rem;">${line}</p>`;
+        }
+        if (s.imagePath) {
+          const imgUrl = '/' + s.imagePath.replace(/\\/g, '/') + '?t=' + Date.now();
+          html += `<div style="margin:12px 0;text-align:center;"><img src="${imgUrl}" alt="步骤图" class="zoomable" onclick="openZoom(this)" style="max-width:100%;border:1px solid var(--border);border-radius:8px;"></div>`;
+        }
+        html += `</div>`;
+      }
+
+      document.getElementById('instruction-content').innerHTML = html;
+      document.getElementById('render-actions').style.display = 'none';
+      document.getElementById('review3-panel').style.display = '';
+      // 同步模式选择器：渲染时用的模式 = 重新生成时的默认模式
+      const usedMode = document.querySelector('input[name="imgMode"]:checked')?.value || 'comparison';
+      const regenRadio = document.querySelector(`input[name="imgMode2"][value="${usedMode}"]`);
+      if (regenRadio) regenRadio.checked = true;
+      setStep(6);
+    }
+  } catch(e) { toast('渲染失败：' + e.message, 'error'); }
+  finally {
+    document.getElementById('btn-render').disabled = false;
+    document.getElementById('btn-render').textContent = '渲染装配指导书';
+    // 模式选择器保持锁定，直到重新上传 STEP 文件
+  }
+}
+
+// === 第三阶段审核 ===
+async function reviewInstruction(action) {
+  if (action === 'reject') {
+    if (!confirm('确认驳回？将回退到流程生成阶段。')) return;
+    state.instructionId = null; state.approvedId = null;
+    document.getElementById('instruction-content').innerHTML = '';
+    document.getElementById('review3-panel').style.display = 'none';
+    document.getElementById('card-pdf').style.display = 'none';
+    document.getElementById('card-instruction').style.display = 'none';
+    // 回退到流程生成
+    document.getElementById('draft-content').innerHTML = '';
+    document.getElementById('review2-panel').style.display = 'none';
+    document.getElementById('review-result').innerHTML = '';
+    document.getElementById('btn-generate').style.display = '';
+    document.getElementById('card-generate').style.display = '';
+    setStep(3);
+    toast('已回退到流程生成阶段');
+    return;
+  }
+
+  if (action === 'regenerate_images') {
+    if (!confirm('确认重新生成图片？可能需要等待较长时间。')) return;
+    const btn = document.getElementById('btn-regen');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 正在重新生成图片，请稍候...';
+    // 锁定模式选择器
+    document.querySelectorAll('input[name="imgMode2"]').forEach(r => r.disabled = true);
+    try {
+      const mode = document.querySelector('input[name="imgMode2"]:checked')?.value || 'comparison';
+      const r = await fetch(`${API}/instruction/review`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ instructionId: state.instructionId, action: 'regenerate_images', reason: '重新生成', mode: mode })
+      });
+      const data = await r.json();
+      if (!data.success) { toast(data.error.message, 'error'); return; }
+
+      state.instructionId = data.data.instructionId;
+      const r2 = await fetch(`${API}/instruction/${state.instructionId}`);
+      const d2 = await r2.json();
+      const sections = d2.data.sections;
+      let html = '';
+      for (const s of sections) {
+        const typeNames = { cover: '📋 封面', overview: '📖 概述', step: '🔧 装配步骤', safety: '⚠️ 安全须知', ending: '✅ 尾页' };
+        html += `<div class="card" style="margin:8px 0;"><h3 style="font-size:0.9rem;color:var(--primary);">${typeNames[s.sectionType] || s.sectionType}</h3>`;
+        for (const line of s.content.split('\n').filter(l => l.trim())) { html += `<p style="margin:4px 0;font-size:0.9rem;">${line}</p>`; }
+        if (s.imagePath) {
+          const imgUrl = '/' + s.imagePath.replace(/\\/g, '/') + '?t=' + Date.now();
+          html += `<div style="margin:12px 0;text-align:center;"><img src="${imgUrl}" alt="步骤图" class="zoomable" onclick="openZoom(this)" style="max-width:100%;border:1px solid var(--border);border-radius:8px;"></div>`;
+        }
+        html += `</div>`;
+      }
+      document.getElementById('instruction-content').innerHTML = html;
+      toast('图片已重新生成（模式：' + mode + '）');
+    } catch(e) { toast('重新生成失败：' + e.message, 'error'); }
+    finally {
+      btn.disabled = false; btn.textContent = '🔄 重新生成图片';
+      document.querySelectorAll('input[name="imgMode2"]').forEach(r => r.disabled = false);
+    }
+    return;
+  }
+
+  // approve
+  try {
+    const r = await fetch(`${API}/instruction/review`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ instructionId: state.instructionId, action: 'approve', reason: '确认' })
     });
     const data = await r.json();
     if (!data.success) { toast(data.error.message, 'error'); return; }
 
-    state.instructionId = data.data.instructionId;
-
-    const r2 = await fetch(`${API}/instruction/${state.instructionId}`);
-    const d2 = await r2.json();
-    const sections = d2.data.sections;
-
-    // 以卡片形式展示每个 section，步骤显示图片
-    let html = `<h2 style="margin:16px 0 12px;">📄 装配指导书预览</h2>`;
-
-    for (const s of sections) {
-      const typeNames = { cover: '📋 封面', overview: '📖 概述', step: '🔧 装配步骤', safety: '⚠️ 安全须知', ending: '✅ 尾页' };
-      const typeName = typeNames[s.sectionType] || s.sectionType;
-
-      html += `<div class="card" style="margin:8px 0;">`;
-      html += `<h3 style="font-size:0.9rem;color:var(--primary);">${typeName}</h3>`;
-
-      // 步骤内容换行显示
-      const lines = s.content.split('\n').filter(l => l.trim());
-      for (const line of lines) {
-        html += `<p style="margin:4px 0;font-size:0.9rem;">${line}</p>`;
-      }
-
-      // 图片展示：imagePath 是本地路径如 exports/images/step_1_xxx.png
-      if (s.imagePath) {
-        // 转换为 HTTP URL：/exports/images/step_1_xxx.png
-        const imgUrl = '/' + s.imagePath.replace(/\\/g, '/');
-        html += `<div style="margin:12px 0;text-align:center;">`;
-        html += `<img src="${imgUrl}" alt="步骤图" style="max-width:100%;max-height:400px;border:1px solid var(--border);border-radius:8px;">`;
-        html += `</div>`;
-      }
-
-      html += `</div>`;
-    }
-
-    document.getElementById('instruction-content').innerHTML = html;
-    document.getElementById('btn-pdf').style.display = '';
-    toast('指导书渲染成功');
-  } catch(e) { toast('渲染失败：' + e.message, 'error'); }
-  finally { document.getElementById('btn-render').disabled = false; document.getElementById('btn-render').textContent = '渲染装配指导书'; }
+    document.getElementById('review3-header').innerHTML =
+      '<span class="badge badge-success">✅ 指导书已确认</span>';
+    document.getElementById('review3-actions').style.display = 'none';
+    document.getElementById('card-pdf').style.display = '';
+    setStep(7);
+    toast('指导书审核通过');
+  } catch(e) { toast('审核失败：' + e.message, 'error'); }
 }
 
-// 导出 PDF
+// === 导出 PDF（浏览器下载）===
 async function exportPdf() {
   document.getElementById('btn-pdf').disabled = true;
   document.getElementById('btn-pdf').innerHTML = '<span class="spinner"></span> 正在导出...';
@@ -373,11 +660,66 @@ async function exportPdf() {
     const data = await r.json();
     if (!data.success) { toast(data.error.message, 'error'); return; }
 
-    document.getElementById('instruction-content').innerHTML +=
-      `<p style="margin-top:8px;"><span class="badge badge-success">✅ PDF 已导出：</span> <code>${data.data.pdfPath}</code></p>`;
-    toast('PDF 导出成功：' + data.data.pdfPath);
+    // 浏览器下载
+    const downloadUrl = `${API}/instruction/${state.instructionId}/download-pdf`;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `装配指导书_${state.instructionId.substring(0,8)}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    document.getElementById('pdf-result').innerHTML =
+      `<p><span class="badge badge-success">✅ PDF 已导出并开始下载</span></p>` +
+      `<div class="actions" style="margin-top:12px;"><button class="btn btn-outline" onclick="resetAll()">🔄 开始新任务</button></div>`;
+    setStep(8);
+    toast('PDF 导出成功，正在下载...');
   } catch(e) { toast('PDF 导出失败：' + e.message, 'error'); }
   finally { document.getElementById('btn-pdf').disabled = false; document.getElementById('btn-pdf').textContent = '导出 PDF'; }
+}
+
+// === 重置（允许上传新文件）===
+function resetAll() {
+  state = { stepFileId: null, productGraphId: null, processId: null, steps: [], approvedId: null, instructionId: null, currentStep: 0 };
+
+  // 重置上传区域
+  const zone = document.getElementById('upload-zone');
+  zone.classList.remove('done');
+  zone.onclick = () => document.getElementById('file-input').click();
+  document.getElementById('upload-text').textContent = '点击此处选择 .step 文件，或直接拖拽文件到此处';
+  document.getElementById('upload-status').innerHTML = '';
+  document.getElementById('file-input').value = '';
+
+  // 隐藏所有后续卡片
+  ['card-graph', 'card-generate', 'card-instruction', 'card-pdf'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+
+  // 重置审核1
+  document.getElementById('review1-panel').innerHTML = `
+    <h4>🔍 第一阶段审核：产品结构</h4>
+    <p style="font-size:0.85rem;margin-bottom:8px;">请确认产品结构图中的零件和关系是否正确。</p>
+    <div class="actions"><button class="btn btn-success btn-sm" onclick="reviewProductGraph('accept')">✅ 确认结构正确</button>
+    <button class="btn btn-danger btn-sm" onclick="reviewProductGraph('reject')">❌ 重新上传</button></div>`;
+
+  // 重置生成流程
+  document.getElementById('draft-content').innerHTML = '';
+  document.getElementById('review2-panel').style.display = 'none';
+  document.getElementById('review-result').innerHTML = '';
+  document.getElementById('btn-generate').style.display = '';
+  document.getElementById('review2-actions').style.display = '';
+
+  // 重置指导书
+  document.getElementById('instruction-content').innerHTML = '';
+  document.getElementById('review3-panel').style.display = 'none';
+  document.getElementById('render-actions').style.display = '';
+  document.getElementById('btn-render').style.display = '';
+
+  // 重置 PDF
+  document.getElementById('pdf-result').innerHTML = '';
+
+  setStep(0);
+  toast('已重置，可以上传新文件');
 }
 
 // 拖拽上传
@@ -389,6 +731,119 @@ zone.addEventListener('drop', e => {
   document.getElementById('file-input').files = e.dataTransfer.files;
   uploadFile();
 });
+
+// === 图片缩放 ===
+let zoomLevel = 1;
+function openZoom(img) {
+  const overlay = document.getElementById('zoom-overlay');
+  const zoomImg = document.getElementById('zoom-img');
+  zoomImg.src = img.src;
+  zoomLevel = 1;
+  zoomImg.style.transform = 'scale(1)';
+  overlay.classList.add('active');
+  document.getElementById('zoom-controls').style.display = 'flex';
+}
+function closeZoom() {
+  document.getElementById('zoom-overlay').classList.remove('active');
+  document.getElementById('zoom-controls').style.display = 'none';
+}
+function zoomIn() {
+  zoomLevel = Math.min(zoomLevel + 0.25, 5);
+  document.getElementById('zoom-img').style.transform = `scale(${zoomLevel})`;
+}
+function zoomOut() {
+  zoomLevel = Math.max(zoomLevel - 0.25, 0.25);
+  document.getElementById('zoom-img').style.transform = `scale(${zoomLevel})`;
+}
+function zoomReset() {
+  zoomLevel = 1;
+  document.getElementById('zoom-img').style.transform = 'scale(1)';
+}
+// 鼠标滚轮缩放
+document.getElementById('zoom-overlay').addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.deltaY < 0) zoomIn(); else zoomOut();
+}, { passive: false });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeZoom();
+  if (e.key === '+' || e.key === '=') zoomIn();
+  if (e.key === '-') zoomOut();
+});
+// 滚轮缩放
+document.getElementById('zoom-overlay').addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.deltaY < 0) zoomIn();
+  else zoomOut();
+}, {passive: false});
+
+// === BOM 库管理 ===
+async function loadBomStats() {
+  const btn = document.getElementById('bom-refresh-btn');
+  const origText = btn.textContent;
+  btn.textContent = '⏳ 加载中...';
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/bom/stats`);
+    const data = await r.json();
+    if (!data.success) return;
+    const s = data.data;
+    let detail = `<div style="display:flex;gap:16px;flex-wrap:wrap;">`;
+    detail += `<span>🔩 材料: ${s.materials} 种</span>`;
+    detail += `<span>⚙️ 标准件: ${s.standard_parts} 种</span>`;
+    detail += `<span>📋 模板: ${s.part_templates} 种</span>`;
+    detail += `</div>`;
+    document.getElementById('bom-detail').innerHTML = detail;
+    btn.textContent = '✅ 完成';
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 1500);
+  } catch(e) {
+    console.error('BOM stats error:', e);
+    btn.textContent = '❌ 失败';
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 1500);
+  }
+}
+
+async function exportBom() {
+  try {
+    const r = await fetch(`${API}/bom/export`);
+    const data = await r.json();
+    if (!data.success) { toast('导出失败', 'error'); return; }
+    const blob = new Blob([JSON.stringify(data.data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'bom_library.json'; a.click();
+    URL.revokeObjectURL(url);
+    toast('BOM 库已导出');
+  } catch(e) { toast('导出失败：' + e.message, 'error'); }
+}
+
+async function importBom(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const r = await fetch(`${API}/bom/import`, { method: 'POST', body: formData });
+    const data = await r.json();
+    if (!data.success) { toast(data.error.message, 'error'); return; }
+    const s = data.data.imported;
+    toast(`导入成功：${s.materials} 材料, ${s.standard_parts} 标准件, ${s.part_templates} 模板`);
+    loadBomStats();
+  } catch(e) { toast('导入失败：' + e.message, 'error'); }
+  input.value = '';
+}
+
+// 页面加载时获取 BOM 统计
+loadBomStats();
 </script>
+
+<!-- 图片缩放 lightbox -->
+<div class="zoom-overlay" id="zoom-overlay" onclick="closeZoom()">
+  <img id="zoom-img" src="" alt="放大图" onclick="event.stopPropagation()">
+</div>
+<div class="zoom-controls" id="zoom-controls" style="display:none;">
+  <button onclick="zoomOut()">➖</button>
+  <button onclick="zoomReset()">1:1</button>
+  <button onclick="zoomIn()">➕</button>
+  <button onclick="closeZoom()">✕ 关闭</button>
+</div>
 </body>
 </html>
