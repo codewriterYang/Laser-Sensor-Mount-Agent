@@ -52,6 +52,70 @@ class LLMService:
             return self._llm_step(part_name, part_material, relation, target_name, sequence)
         return self._template_step(part_name, part_material, relation, target_name, sequence)
 
+    def generate_image_prompt(
+        self,
+        part_name: str,
+        face_count: int,
+        surface_types: list[str],
+        color_hex: str | None,
+        length: float,
+        width: float,
+        height: float,
+        sequence: int,
+        total_steps: int,
+        step_title: str,
+    ) -> str | None:
+        """调用 LLM 生成图片 Prompt（英文，用于 Seedream img2img）。
+
+        返回 None 表示 LLM 不可用或失败，由调用方使用 prompt_builder fallback。
+        """
+        if self._client is None:
+            return None
+
+        surfaces = "、".join(surface_types) if surface_types else "未知"
+        color_desc = f"颜色为 {color_hex}" if color_hex else "金属银灰色"
+
+        prompt = f"""你是一个 CAD 渲染专家。请为以下机械零件生成一段英文 Prompt，用于 AI 图片生成模型（Seedream）。
+
+零件信息：
+- 零件类型：{part_name}
+- 面数：{face_count}
+- 曲面类型：{surfaces}
+- 尺寸：{length:.1f} x {width:.1f} x {height:.1f} mm
+- {color_desc}
+- 装配步骤：第 {sequence}/{total_steps} 步：{step_title}
+
+要求：
+1. 用英文描述，适合 AI 图片生成模型
+2. 包含：形状描述、尺寸比例、颜色、材质、视角、装配上下文
+3. 风格：技术工程插图，白色背景，专业打光
+4. 只返回 Prompt 文本，不要 JSON，不要 markdown 代码块
+5. 控制在 100-150 词"""
+
+        try:
+            response = self._client.chat.completions.create(
+                model=config.LLM_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=300,
+            )
+            result = response.choices[0].message.content.strip()
+            # 去除 markdown 代码块
+            if result.startswith("```"):
+                result = result.split("\n", 1)[-1]
+                if result.endswith("```"):
+                    result = result[:-3]
+                result = result.strip()
+            if len(result) > 20:
+                from ..logger import logger
+                logger.info(f"LLM 生成图片 Prompt：{result[:80]}...")
+                return result
+            return None
+        except Exception as e:
+            from ..logger import logger
+            logger.warning(f"[LLM → Prompt 模板切换] LLM 生成 Prompt 失败（{type(e).__name__}: {e}），使用规则模板")
+            return None
+
     def _llm_step(
         self,
         part_name: str,
@@ -115,8 +179,9 @@ class LLMService:
                 requiredParts=[part_name] + ([target_name] if target_name else []),
                 requiredTools=data.get("requiredTools", []),
             )
-        except Exception:
-            # LLM 出错时回退到模板
+        except Exception as e:
+            from ..logger import logger
+            logger.warning(f"[LLM → 模板切换] LLM 调用失败（{type(e).__name__}: {e}），已自动切换到中文模板生成步骤文本")
             return self._template_step(part_name, part_material, relation, target_name, sequence)
 
     def _template_step(

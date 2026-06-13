@@ -99,6 +99,21 @@ class SubmitReviewRequest(BaseModel):
     decisions: list[ReviewDecisionSchema]
 
 
+class ProductGraphReviewRequest(BaseModel):
+    """产品结构图审核请求。"""
+    productGraphId: UUID
+    action: str  # "accept" | "reject"
+    reason: str = ""
+
+
+class InstructionReviewRequest(BaseModel):
+    """指导书审核请求。"""
+    instructionId: UUID
+    action: str  # "approve" | "reject" | "regenerate_images"
+    reason: str = ""
+    mode: str = "comparison"  # "reference_only" | "text_and_image" | "comparison"
+
+
 class SubmitReviewData(BaseModel):
     approvedProcessId: UUID
     status: str
@@ -117,6 +132,7 @@ class ApprovedProcessGraphSchema(BaseModel):
 
 class RenderInstructionRequest(BaseModel):
     approvedProcessId: UUID
+    mode: str = "comparison"  # "reference_only" | "text_and_image" | "comparison"
 
 
 class RenderInstructionData(BaseModel):
@@ -133,6 +149,7 @@ class AssemblyInstructionSchema(BaseModel):
     instructionId: UUID
     title: str = ""
     sections: list[SectionSchema] = Field(default_factory=list)
+    mode: str = "comparison"  # reference_only | ai_enhanced | comparison
 
 
 # --- PDF 导出 ---
