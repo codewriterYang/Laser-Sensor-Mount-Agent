@@ -169,21 +169,21 @@ class TestRenderProgressiveAssembly:
 
     def test_valid_step_file_returns_image(self):
         """有效 STEP 文件应返回 PNG 图片。"""
-        text = Path("uploads/ILD1x20-10.step").read_text(encoding="utf-8", errors="replace")
+        text = Path("ILD1x20-100.step").read_text(encoding="utf-8", errors="replace")
         img = render_progressive_assembly(text, 0, 10)
         assert len(img) > 0
         assert img[:4] == b'\x89PNG'
 
     def test_final_step_returns_image(self):
         """最后一步（完整装配体）应返回 PNG 图片。"""
-        text = Path("uploads/ILD1x20-10.step").read_text(encoding="utf-8", errors="replace")
+        text = Path("ILD1x20-100.step").read_text(encoding="utf-8", errors="replace")
         img = render_progressive_assembly(text, 9, 10)
         assert len(img) > 0
         assert img[:4] == b'\x89PNG'
 
     def test_step_beyond_part_count_cycles(self):
         """步骤数 > 零件数时应循环映射，不崩溃。"""
-        text = Path("uploads/ILD1x20-10.step").read_text(encoding="utf-8", errors="replace")
+        text = Path("ILD1x20-100.step").read_text(encoding="utf-8", errors="replace")
         img = render_progressive_assembly(text, 15, 20)
         assert len(img) > 0
 
@@ -192,7 +192,7 @@ class TestRenderProgressiveAssembly:
         from PIL import Image
         from io import BytesIO
 
-        text = Path("uploads/ILD1x20-10.step").read_text(encoding="utf-8", errors="replace")
+        text = Path("ILD1x20-100.step").read_text(encoding="utf-8", errors="replace")
         img_bytes = render_progressive_assembly(text, 0, 10)
         img = Image.open(BytesIO(img_bytes))
         assert img.size == (1024, 1024)
