@@ -34,3 +34,13 @@ class ProductGraphRepository:
             pg.status = status
             self.db.flush()
         return pg
+
+    def update_graph_json(self, product_graph_id: UUID, graph_json: str, status: str | None = None) -> ProductGraph | None:
+        """更新 ProductGraph 的 JSON 数据和状态。"""
+        pg = self.get_by_id(product_graph_id)
+        if pg:
+            pg.graph_json = graph_json
+            if status:
+                pg.status = status
+            self.db.flush()
+        return pg

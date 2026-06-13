@@ -28,3 +28,8 @@ IMAGE_API_KEY = os.getenv("IMAGE_API_KEY", "")
 def is_llm_configured() -> bool:
     """如果 LLM 凭据已配置（非空且非占位符），返回 True。"""
     return bool(LLM_API_KEY) and LLM_API_KEY != "your_api_key_here"
+
+
+def is_image_configured() -> bool:
+    """如果图片模型凭据已配置（非空且非占位符），返回 True。"""
+    return bool(IMAGE_API_KEY) and IMAGE_API_KEY != "your_api_key_here"
