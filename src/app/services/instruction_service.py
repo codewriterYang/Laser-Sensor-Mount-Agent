@@ -45,11 +45,12 @@ EXPORTS_DIR = Path("exports")
 
 # CJK 字体路径，按优先级尝试
 _CJK_FONT_PATHS = [
-    "C:/Windows/Fonts/simhei.ttf",     # 黑体 (Windows TTF，优先避免 TTC 子集化问题)
-    "C:/Windows/Fonts/msyh.ttc",       # 微软雅黑 (Windows)
-    "C:/Windows/Fonts/simsun.ttc",     # 宋体 (Windows)
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux
-    "/System/Library/Fonts/PingFang.ttc",  # macOS
+    "C:/Windows/Fonts/simhei.ttf",                    # Windows 黑体
+    "C:/Windows/Fonts/msyh.ttc",                      # Windows 微软雅黑
+    "C:/Windows/Fonts/simsun.ttc",                    # Windows 宋体
+    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",   # Linux Docker (fonts-wqy-zenhei)
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux Noto
+    "/System/Library/Fonts/PingFang.ttc",              # macOS
 ]
 
 _cjk_font_path: str | None = None
