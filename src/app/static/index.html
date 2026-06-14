@@ -685,6 +685,8 @@ function resetAll() {
   // 重置上传区域
   const zone = document.getElementById('upload-zone');
   zone.classList.remove('done');
+  zone.style.opacity = '1';
+  zone.style.pointerEvents = '';
   zone.onclick = () => document.getElementById('file-input').click();
   document.getElementById('upload-text').textContent = '点击此处选择 .step 文件，或直接拖拽文件到此处';
   document.getElementById('upload-status').innerHTML = '';
