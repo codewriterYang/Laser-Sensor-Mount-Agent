@@ -61,10 +61,19 @@ def _get_cjk_font_path() -> str | None:
     global _cjk_font_path
     if _cjk_font_path is not None:
         return _cjk_font_path if _cjk_font_path else None
+    # 1. 按预定义路径查找
     for path in _CJK_FONT_PATHS:
         if Path(path).exists():
             _cjk_font_path = path
             return path
+    # 2. 搜索常见字体目录
+    import glob
+    for pattern in ["/usr/share/fonts/**/*.ttc", "/usr/share/fonts/**/*.ttf"]:
+        matches = glob.glob(pattern, recursive=True)
+        cjk = [m for m in matches if "wqy" in m.lower() or "noto" in m.lower() or "cjk" in m.lower()]
+        if cjk:
+            _cjk_font_path = cjk[0]
+            return cjk[0]
     _cjk_font_path = ""
     return None
 
