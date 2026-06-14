@@ -357,7 +357,7 @@ class ImageService:
             )
         return self._doubao_client.generate_with_reference(
             prompt=prompt, reference_image=ref_png,
-            strength=0.72, size="1024x1024",
+            strength=0.72, size="1920x1920",
         )
 
     def _make_side_by_side(
