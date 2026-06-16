@@ -1,6 +1,9 @@
 services:
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laser-sensor-backend
     ports:
       - "8000:8000"
     env_file:
@@ -10,4 +13,29 @@ services:
       - ./exports:/app/exports
       - ./data/bom:/app/data/bom
       - ./logs:/app/logs
+      - app-db:/app/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    # ---- 资源限制（可选，按服务器配置调整）----
+    # 小内存服务器（<=2G）建议开启：
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1200M    # 内存上限，留 400M+ 给系统
+    #       cpus: "1.5"      # CPU 上限
+    # 大内存服务器（>=4G）可不设置，不限制资源
+    networks:
+      - app-net
+
+volumes:
+  app-db:
+    driver: local
+
+networks:
+  app-net:
+    driver: bridge
