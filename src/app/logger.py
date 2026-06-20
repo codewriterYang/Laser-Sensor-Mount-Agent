@@ -2,7 +2,21 @@
 
 import logging
 import sys
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
+
+# 北京时间 (UTC+8)
+_BEIJING_TZ = timezone(timedelta(hours=8))
+
+
+class _BeijingFormatter(logging.Formatter):
+    """使用北京时间的日志格式化器。"""
+
+    def formatTime(self, record, datefmt=None):
+        dt = datetime.fromtimestamp(record.created, tz=_BEIJING_TZ)
+        if datefmt:
+            return dt.strftime(datefmt)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 LOGS_DIR = Path("logs")
 LOG_FILE = LOGS_DIR / "app.log"
@@ -24,8 +38,8 @@ def setup_logging(level: str = "INFO") -> logging.Logger:
     if logger.handlers:
         return logger
 
-    # 统一日志格式
-    fmt = logging.Formatter(
+    # 统一日志格式（北京时间）
+    fmt = _BeijingFormatter(
         fmt="%(asctime)s | %(levelname)-7s | %(module)s:%(lineno)d | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
