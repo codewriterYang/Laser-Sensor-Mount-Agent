@@ -43,12 +43,12 @@ class DoubaoImageClient:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
         logger.info(f"豆包图片客户端已初始化：model={self._model}")
 
-    def generate(self, prompt: str, size: str = "1024x1024", skip_cache: bool = False) -> bytes:
+    def generate(self, prompt: str, size: str = "1920x1920", skip_cache: bool = False) -> bytes:
         """调用 Seedream 生成图片。
 
         Args:
             prompt: 图片生成 Prompt
-            size: 图片尺寸，如 "1024x1024", "1536x1024"
+            size: 图片尺寸，如 "1920x1920", "1920x1080"
             skip_cache: 跳过缓存，强制重新生成
 
         Returns:
@@ -116,7 +116,7 @@ class DoubaoImageClient:
         prompt: str,
         reference_image: bytes,
         strength: float = 0.5,
-        size: str = "1024x1024",
+        size: str = "1920x1920",
         skip_cache: bool = False,
     ) -> bytes:
         """使用参考图进行 image-to-image 生成。
