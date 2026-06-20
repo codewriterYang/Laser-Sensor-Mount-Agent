@@ -116,11 +116,15 @@ class InstructionService:
         self.instruction_repo = InstructionRepository(db)
         self.image_service = ImageService()
 
-    def render(self, approved_process_id: UUID, mode: str = "comparison") -> tuple[UUID, AssemblyInstructionSchema]:
-        """从 ApprovedProcessGraph 渲染 AssemblyInstruction。
+    def _prepare_render_context(self, approved_process_id: UUID) -> dict:
+        """准备渲染所需的上下文数据。
 
-        mode: "reference_only" | "text_and_image" | "comparison"
-        返回 (instruction_id, AssemblyInstructionSchema)。
+        封装 render() 和 render_stream() 的共享前置逻辑：
+        查询 ApprovedProcess → 解析 JSON → 获取零件数据 → 获取 STEP 文本。
+
+        Returns:
+            {"approved": ApprovedProcessGraphSchema, "overall_dims": ...,
+             "per_step_info": ..., "step_text": ..., "step_dicts": ...}
         """
         apg = self.approved_repo.get_by_id(approved_process_id)
         if apg is None:
@@ -128,24 +132,30 @@ class InstructionService:
 
         data = json.loads(apg.graph_json)
         approved = ApprovedProcessGraphSchema(**data)
-
-        # 通过链路追溯获取零件数据：ApprovedProcess → DraftProcess → ProductGraph
         overall_dims, per_step_info = self._get_part_data(apg.draft_process_id)
-
-        # 获取 STEP 文件文本（用于生成参考图）
         step_text = self._get_step_text(apg.draft_process_id)
-
-        # 为每个步骤生成图片（基于真实 STEP 尺寸和曲面类型数据）
         step_dicts = [s.model_dump() for s in approved.steps]
-        image_paths = self.image_service.generate_all_step_images(
-            step_dicts, overall_dims, per_step_info,
-            step_text=step_text,
-            mode=mode,
-        )
 
-        # 构建包含图片路径的章节
+        return {
+            "approved": approved,
+            "overall_dims": overall_dims,
+            "per_step_info": per_step_info,
+            "step_text": step_text,
+            "step_dicts": step_dicts,
+        }
+
+    def _build_and_save_instruction(
+        self,
+        approved: ApprovedProcessGraphSchema,
+        image_paths: dict[int, str],
+        mode: str,
+        approved_process_id: UUID,
+    ) -> tuple[UUID, AssemblyInstructionSchema]:
+        """构建 sections 并持久化 AssemblyInstruction。
+
+        封装 render() 和 render_stream() 的共享后置逻辑。
+        """
         sections = self._build_sections(approved, image_paths)
-
         instruction_id = uuid.uuid4()
         instruction = AssemblyInstructionSchema(
             instructionId=instruction_id,
@@ -153,15 +163,31 @@ class InstructionService:
             sections=sections,
             mode=mode,
         )
-
         ai = AssemblyInstruction(
             id=str(instruction_id),
             approved_process_id=str(approved_process_id),
             instruction_json=instruction.model_dump_json(),
         )
         self.instruction_repo.save(ai)
-
         return instruction_id, instruction
+
+    def render(self, approved_process_id: UUID, mode: str = "comparison") -> tuple[UUID, AssemblyInstructionSchema]:
+        """从 ApprovedProcessGraph 渲染 AssemblyInstruction。
+
+        mode: "reference_only" | "text_and_image" | "comparison"
+        返回 (instruction_id, AssemblyInstructionSchema)。
+        """
+        ctx = self._prepare_render_context(approved_process_id)
+        approved = ctx["approved"]
+
+        # 为每个步骤生成图片（基于真实 STEP 尺寸和曲面类型数据）
+        image_paths = self.image_service.generate_all_step_images(
+            ctx["step_dicts"], ctx["overall_dims"], ctx["per_step_info"],
+            step_text=ctx["step_text"],
+            mode=mode,
+        )
+
+        return self._build_and_save_instruction(approved, image_paths, mode, approved_process_id)
 
     def render_stream(self, approved_process_id: UUID, mode: str = "comparison"):
         """流式渲染 AssemblyInstruction，逐步 yield 进度事件。
@@ -170,24 +196,23 @@ class InstructionService:
             dict: {"type": "progress|done|error", "step": N, "total": N, "message": "...", ...}
         """
         try:
-            apg = self.approved_repo.get_by_id(approved_process_id)
-            if apg is None:
-                yield {"type": "error", "message": f"未找到已审核工艺: {approved_process_id}"}
-                return
+            ctx = self._prepare_render_context(approved_process_id)
+        except ApprovedProcessNotFoundError:
+            yield {"type": "error", "message": f"未找到已审核工艺: {approved_process_id}"}
+            return
 
-            data = json.loads(apg.graph_json)
-            approved = ApprovedProcessGraphSchema(**data)
+        approved = ctx["approved"]
+        overall_dims = ctx["overall_dims"]
+        per_step_info = ctx["per_step_info"]
+        step_text = ctx["step_text"]
+        step_dicts = ctx["step_dicts"]
+        total = len(step_dicts)
+        image_paths: dict[int, str] = {}
 
-            overall_dims, per_step_info = self._get_part_data(apg.draft_process_id)
-            step_text = self._get_step_text(apg.draft_process_id)
-
-            step_dicts = [s.model_dump() for s in approved.steps]
-            total = len(step_dicts)
-            image_paths = {}
-
+        try:
             # 逐步生成图片
             for i, step in enumerate(step_dicts):
-                seq = i + 1  # 用循环索引作为步骤编号
+                seq = i + 1
                 title = step.get("title", "")
 
                 yield {
@@ -226,21 +251,9 @@ class InstructionService:
                 }
 
             # 构建最终指导书
-            sections = self._build_sections(approved, image_paths)
-            instruction_id = uuid.uuid4()
-            instruction = AssemblyInstructionSchema(
-                instructionId=instruction_id,
-                title=f"装配指导书 — {approved.approvedBy}",
-                sections=sections,
-                mode=mode,
+            instruction_id, _ = self._build_and_save_instruction(
+                approved, image_paths, mode, approved_process_id,
             )
-
-            ai = AssemblyInstruction(
-                id=str(instruction_id),
-                approved_process_id=str(approved_process_id),
-                instruction_json=instruction.model_dump_json(),
-            )
-            self.instruction_repo.save(ai)
 
             yield {
                 "type": "done",
