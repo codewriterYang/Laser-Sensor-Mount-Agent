@@ -56,7 +56,7 @@ class TestMultiViewReference:
             img.crop((512, 512, 1024, 1024)), # 右下
         ]
         for i, q in enumerate(quadrants):
-            pixels = list(q.convert("L").getdata())
+            pixels = list(q.convert("L").get_flattened_data())
             non_white = sum(1 for p in pixels if p < 250)
             assert non_white > 100, f"象限 {i} 应有内容，实际非白像素={non_white}"
 
@@ -69,8 +69,8 @@ class TestMultiViewReference:
             render_part_multi_view(step_text, 1)
         ))
         # 像素应该不同
-        s_pixels = list(single.convert("L").getdata())
-        m_pixels = list(multi.convert("L").getdata())
+        s_pixels = list(single.convert("L").get_flattened_data())
+        m_pixels = list(multi.convert("L").get_flattened_data())
         diff = sum(1 for s, m in zip(s_pixels, m_pixels) if abs(s - m) > 10)
         assert diff > 1000, f"多视角应与单视角有显著差异，实际差异像素={diff}"
 

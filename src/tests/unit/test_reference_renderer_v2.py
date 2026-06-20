@@ -66,7 +66,7 @@ class TestGlobalCoordinates:
         # 渲染步骤 2（包含零件 0 和零件 1）
         img_bytes = render_progressive_assembly(step_text, 1, len(msb_refs))
         img = Image.open(BytesIO(img_bytes)).convert("L")
-        pixels = list(img.getdata())
+        pixels = list(img.get_flattened_data())
 
         # 统计非白像素的数量
         non_white_count = sum(1 for p in pixels if p < 250)
@@ -80,7 +80,7 @@ class TestGlobalCoordinates:
 
         img_bytes = render_progressive_assembly(step_text, 0, len(msb_refs))
         img = Image.open(BytesIO(img_bytes)).convert("RGB")
-        pixels = list(img.getdata())
+        pixels = list(img.get_flattened_data())
 
         # 检查是否存在橙色像素（R>180, G<150, B<80）
         orange_count = sum(1 for r, g, b in pixels if r > 180 and g < 150 and b < 80)
@@ -92,7 +92,7 @@ class TestGlobalCoordinates:
             pytest.skip("STEP 文件零件不足")
 
         assembly = Image.open(BytesIO(render_assembly_wireframe(step_text))).convert("L")
-        assembly_non_white = sum(1 for p in assembly.getdata() if p < 250)
+        assembly_non_white = sum(1 for p in assembly.get_flattened_data() if p < 250)
 
         # 装配体有多个零件，非白像素应 > 1000
         assert assembly_non_white > 1000, f"装配体应有非白像素 > 1000，实际 {assembly_non_white}"
@@ -114,8 +114,8 @@ class TestPartColors:
         default_img = Image.open(BytesIO(render_part_wireframe(step_text, 0))).convert("RGB")
         colored_img = Image.open(BytesIO(render_part_wireframe(step_text, 0, color="#ff0000"))).convert("RGB")
 
-        default_pixels = list(default_img.getdata())
-        colored_pixels = list(colored_img.getdata())
+        default_pixels = list(default_img.get_flattened_data())
+        colored_pixels = list(colored_img.get_flattened_data())
 
         # 至少有一些像素颜色不同
         diff_count = sum(1 for d, c in zip(default_pixels, colored_pixels) if d != c)

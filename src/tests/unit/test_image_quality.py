@@ -58,8 +58,8 @@ class TestFaceFill:
             _render_edges_to_image(edges, fill_faces=True)
         )).convert("L")
 
-        nw_no_fill = sum(1 for p in img_no_fill.getdata() if p < 250)
-        nw_fill = sum(1 for p in img_fill.getdata() if p < 250)
+        nw_no_fill = sum(1 for p in img_no_fill.get_flattened_data() if p < 250)
+        nw_fill = sum(1 for p in img_fill.get_flattened_data() if p < 250)
 
         assert nw_fill >= nw_no_fill, (
             f"fill_faces 应增加非白像素: {nw_fill} < {nw_no_fill}"
